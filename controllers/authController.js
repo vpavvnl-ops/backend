@@ -6,8 +6,7 @@ const { sendOtpEmail } = require('../utils/emailService');
 // REGISTER
 exports.register = async (req, res) => {
     try {
-        const { username, email, password, confirm_password, referral_id } = req.body;
-
+const { username, email, password, confirm_password, referral_id } = req.body;
         // Validation
         if (!username || !email || !password || !confirm_password) {
             return res.status(400).json({ success: false, message: 'All fields are required.' });

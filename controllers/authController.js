@@ -3,13 +3,13 @@ const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const { sendOtpEmail } = require('../utils/emailService');
 
-// @route   POST /api/auth/register
+// REGISTER
 exports.register = async (req, res) => {
     try {
         const { username, email, password, confirm_password, referral_id } = req.body;
 
-        // 1. Basic Validation
-        if (!username || !email || !password || !confirm_password || !referral_id) {
+        // Validation
+        if (!username || !email || !password || !confirm_password) {
             return res.status(400).json({ success: false, message: 'All fields are required.' });
         }
 
@@ -17,31 +17,33 @@ exports.register = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Password and Confirm Password do not match.' });
         }
 
-        // 2. Check if email exists
+        // Check existing user
         const existingUser = await User.findOne({ email });
         if (existingUser) {
             return res.status(409).json({ success: false, message: 'Email is already registered.' });
         }
 
-        // 3. Referral Logic (UPDATED ✅)
+        // Optional referral
         let referringUser = null;
 
-        if (referral_id !== "ADMIN123") {
-            referringUser = await User.findOne({ referral_code: referral_id });
+        if (referral_id) {
+            if (referral_id !== "ADMIN123") {
+                referringUser = await User.findOne({ referral_code: referral_id });
 
-            if (!referringUser) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Invalid Referral ID. Referring user not found.'
-                });
+                if (!referringUser) {
+                    return res.status(400).json({
+                        success: false,
+                        message: 'Invalid Referral ID.'
+                    });
+                }
             }
         }
 
-        // 4. Hash Password
+        // Hash password
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        // 5. Generate Unique Referral Code
+        // Generate referral code
         const generateReferralCode = () => `USER${crypto.randomBytes(3).toString('hex').toUpperCase()}`;
         let newReferralCode = generateReferralCode();
 
@@ -49,11 +51,11 @@ exports.register = async (req, res) => {
             newReferralCode = generateReferralCode();
         }
 
-        // 6. Generate OTP
+        // OTP
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
         const otp_expiry = new Date(Date.now() + 5 * 60 * 1000);
 
-        // 7. Create User
+        // Create user
         const newUser = new User({
             username,
             email,
@@ -67,15 +69,12 @@ exports.register = async (req, res) => {
 
         await newUser.save();
 
-        // 8. Send OTP Email (temporary off)
-// await sendOtpEmail(email, otp);
-
-// 9. Send Response (OTP direct दिखाओ)
-res.status(201).json({
-    success: true,
-    message: 'User registered successfully.',
-    otp: otp
-});
+        // Response
+        res.status(201).json({
+            success: true,
+            message: 'User registered successfully.',
+            otp: otp
+        });
 
     } catch (error) {
         console.error('Registration Error:', error);
@@ -107,7 +106,7 @@ exports.verifyOtp = async (req, res) => {
         }
 
         if (user.otp_expiry < new Date()) {
-            return res.status(400).json({ success: false, message: 'OTP has expired. Please request a new one.' });
+            return res.status(400).json({ success: false, message: 'OTP expired.' });
         }
 
         user.is_verified = true;
@@ -118,11 +117,11 @@ exports.verifyOtp = async (req, res) => {
 
         res.status(200).json({
             success: true,
-            message: 'Account verified successfully. You can now log in.'
+            message: 'Account verified successfully.'
         });
 
     } catch (error) {
-        console.error('OTP Verification Error:', error);
-        res.status(500).json({ success: false, message: 'Server error during OTP verification.' });
+        console.error('OTP Error:', error);
+        res.status(500).json({ success: false, message: 'Server error.' });
     }
 };

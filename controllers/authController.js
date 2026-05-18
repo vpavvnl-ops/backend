@@ -17,15 +17,22 @@ exports.register = async (req, res) => {
         } = req.body;
 
         // Validation
-        if (!username || !email || !password || !confirm_password) {
+        if (
+            !username ||
+            !email ||
+            !password ||
+            !confirm_password ||
+            !referral_id
+        ) {
 
             return res.status(400).json({
                 success: false,
-                message: 'All fields are required.'
+                message: 'All fields including Referral ID are required.'
             });
 
         }
 
+        // Password Match
         if (password !== confirm_password) {
 
             return res.status(400).json({
@@ -50,22 +57,20 @@ exports.register = async (req, res) => {
         // Referral Check
         let referringUser = null;
 
-        if (referral_id) {
+        // ADMIN123 special referral
+        if (referral_id !== "ADMIN123") {
 
-            if (referral_id !== "ADMIN123") {
+            referringUser = await User.findOne({
+                referral_code: referral_id
+            });
 
-                referringUser = await User.findOne({
-                    referral_code: referral_id
+            if (!referringUser) {
+
+                return res.status(400).json({
+                    success: false,
+                    message: 'Invalid Referral ID.'
                 });
 
-                if (!referringUser) {
-
-                    return res.status(400).json({
-                        success: false,
-                        message: 'Invalid Referral ID.'
-                    });
-
-                }
             }
         }
 
@@ -112,7 +117,8 @@ exports.register = async (req, res) => {
         res.status(201).json({
             success: true,
             message: 'User registered successfully.',
-            otp
+            otp,
+            referral_code: newReferralCode
         });
 
     } catch (error) {
@@ -271,7 +277,13 @@ exports.login = async (req, res) => {
         res.status(200).json({
             success: true,
             message: 'Login successful',
-            token
+            token,
+            user: {
+                id: user._id,
+                username: user.username,
+                email: user.email,
+                referral_code: user.referral_code
+            }
         });
 
     } catch (error) {

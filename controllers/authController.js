@@ -298,3 +298,61 @@ exports.login = async (req, res) => {
     }
 
 };
+
+// FORGOT PASSWORD
+exports.forgotPassword = async (req, res) => {
+
+    try {
+
+        const { email, newPassword } = req.body;
+
+        if (!email || !newPassword) {
+
+            return res.status(400).json({
+                success: false,
+                message: 'Email and new password are required'
+            });
+
+        }
+
+        const user = await User.findOne({ email });
+
+        if (!user) {
+
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+
+        }
+
+        // Hash New Password
+        const salt = await bcrypt.genSalt(10);
+
+        const hashedPassword = await bcrypt.hash(
+            newPassword,
+            salt
+        );
+
+        // Update Password
+        user.password = hashedPassword;
+
+        await user.save();
+
+        res.status(200).json({
+            success: true,
+            message: 'Password updated successfully'
+        });
+
+    } catch (error) {
+
+        console.log(error);
+
+        res.status(500).json({
+            success: false,
+            message: 'Server Error'
+        });
+
+    }
+
+};

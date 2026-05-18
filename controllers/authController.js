@@ -57,7 +57,6 @@ exports.register = async (req, res) => {
         // Referral Check
         let referringUser = null;
 
-        // ADMIN123 special referral
         if (referral_id !== "ADMIN123") {
 
             referringUser = await User.findOne({
@@ -212,7 +211,7 @@ exports.verifyOtp = async (req, res) => {
 
 };
 
-// LOGIN WITH JWT
+// LOGIN
 exports.login = async (req, res) => {
 
     try {
@@ -299,18 +298,18 @@ exports.login = async (req, res) => {
 
 };
 
-// FORGOT PASSWORD
+// FORGOT PASSWORD OTP SEND
 exports.forgotPassword = async (req, res) => {
 
     try {
 
-        const { email, newPassword } = req.body;
+        const { email } = req.body;
 
-        if (!email || !newPassword) {
+        if (!email) {
 
             return res.status(400).json({
                 success: false,
-                message: 'Email and new password are required'
+                message: 'Email is required'
             });
 
         }
@@ -326,7 +325,97 @@ exports.forgotPassword = async (req, res) => {
 
         }
 
-        // Hash New Password
+        // Generate OTP
+        const otp = Math.floor(
+            100000 + Math.random() * 900000
+        ).toString();
+
+        // OTP Expiry
+        const otp_expiry = new Date(
+            Date.now() + 5 * 60 * 1000
+        );
+
+        // Save OTP
+        user.otp = otp;
+        user.otp_expiry = otp_expiry;
+
+        await user.save();
+
+        res.status(200).json({
+            success: true,
+            message: 'OTP sent successfully',
+            otp
+        });
+
+    } catch (error) {
+
+        console.log(error);
+
+        res.status(500).json({
+            success: false,
+            message: 'Server Error'
+        });
+
+    }
+
+};
+
+// RESET PASSWORD WITH OTP
+exports.resetPassword = async (req, res) => {
+
+    try {
+
+        const {
+            email,
+            otp,
+            newPassword
+        } = req.body;
+
+        if (
+            !email ||
+            !otp ||
+            !newPassword
+        ) {
+
+            return res.status(400).json({
+                success: false,
+                message: 'All fields are required'
+            });
+
+        }
+
+        const user = await User.findOne({ email });
+
+        if (!user) {
+
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+
+        }
+
+        // OTP Check
+        if (user.otp !== otp) {
+
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid OTP'
+            });
+
+        }
+
+        // OTP Expiry Check
+        if (user.otp_expiry < new Date()) {
+
+            return res.status(400).json({
+                success: false,
+                message: 'OTP expired'
+            });
+
+        }
+
+        // Hash Password
         const salt = await bcrypt.genSalt(10);
 
         const hashedPassword = await bcrypt.hash(
@@ -337,11 +426,15 @@ exports.forgotPassword = async (req, res) => {
         // Update Password
         user.password = hashedPassword;
 
+        // Clear OTP
+        user.otp = null;
+        user.otp_expiry = null;
+
         await user.save();
 
         res.status(200).json({
             success: true,
-            message: 'Password updated successfully'
+            message: 'Password reset successful'
         });
 
     } catch (error) {

@@ -1,17 +1,13 @@
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
-<<<<<<< HEAD
 const jwt = require('jsonwebtoken');
-=======
->>>>>>> c8d253e42948387cc2b63c3a380d721522c9d061
 
 // REGISTER
 exports.register = async (req, res) => {
 
     try {
 
-<<<<<<< HEAD
         const {
             username,
             email,
@@ -19,35 +15,23 @@ exports.register = async (req, res) => {
             confirm_password,
             referral_id
         } = req.body;
-=======
-        const { username, email, password, confirm_password, referral_id } = req.body;
->>>>>>> c8d253e42948387cc2b63c3a380d721522c9d061
 
+        // Validation
         if (!username || !email || !password || !confirm_password) {
-<<<<<<< HEAD
 
-=======
->>>>>>> c8d253e42948387cc2b63c3a380d721522c9d061
             return res.status(400).json({
                 success: false,
                 message: 'All fields are required.'
             });
-<<<<<<< HEAD
 
         }
 
         if (password !== confirm_password) {
 
-=======
-        }
-
-        if (password !== confirm_password) {
->>>>>>> c8d253e42948387cc2b63c3a380d721522c9d061
             return res.status(400).json({
                 success: false,
                 message: 'Password and Confirm Password do not match.'
             });
-<<<<<<< HEAD
 
         }
 
@@ -56,26 +40,14 @@ exports.register = async (req, res) => {
 
         if (existingUser) {
 
-=======
-        }
-
-        const existingUser = await User.findOne({ email });
-
-        if (existingUser) {
->>>>>>> c8d253e42948387cc2b63c3a380d721522c9d061
             return res.status(409).json({
                 success: false,
                 message: 'Email is already registered.'
             });
-<<<<<<< HEAD
 
         }
 
         // Referral Check
-=======
-        }
-
->>>>>>> c8d253e42948387cc2b63c3a380d721522c9d061
         let referringUser = null;
 
         if (referral_id) {
@@ -97,18 +69,12 @@ exports.register = async (req, res) => {
             }
         }
 
-<<<<<<< HEAD
         // Password Hash
-=======
->>>>>>> c8d253e42948387cc2b63c3a380d721522c9d061
         const salt = await bcrypt.genSalt(10);
 
         const hashedPassword = await bcrypt.hash(password, salt);
 
-<<<<<<< HEAD
         // Generate Referral Code
-=======
->>>>>>> c8d253e42948387cc2b63c3a380d721522c9d061
         const generateReferralCode = () =>
             `USER${crypto.randomBytes(3).toString('hex').toUpperCase()}`;
 
@@ -120,7 +86,6 @@ exports.register = async (req, res) => {
 
         }
 
-<<<<<<< HEAD
         // Generate OTP
         const otp = Math.floor(
             100000 + Math.random() * 900000
@@ -131,16 +96,6 @@ exports.register = async (req, res) => {
         );
 
         // Create User
-=======
-        const otp = Math.floor(
-            100000 + Math.random() * 900000
-        ).toString();
-
-        const otp_expiry = new Date(
-            Date.now() + 5 * 60 * 1000
-        );
-
->>>>>>> c8d253e42948387cc2b63c3a380d721522c9d061
         const newUser = new User({
             username,
             email,
@@ -181,7 +136,6 @@ exports.verifyOtp = async (req, res) => {
         const { email, otp } = req.body;
 
         if (!email || !otp) {
-<<<<<<< HEAD
 
             return res.status(400).json({
                 success: false,
@@ -264,11 +218,6 @@ exports.login = async (req, res) => {
             return res.status(400).json({
                 success: false,
                 message: 'Email and password are required'
-=======
-            return res.status(400).json({
-                success: false,
-                message: 'Email and OTP are required.'
->>>>>>> c8d253e42948387cc2b63c3a380d721522c9d061
             });
 
         }
@@ -279,76 +228,6 @@ exports.login = async (req, res) => {
 
             return res.status(404).json({
                 success: false,
-<<<<<<< HEAD
-=======
-                message: 'User not found.'
-            });
-        }
-
-        if (user.is_verified) {
-            return res.status(400).json({
-                success: false,
-                message: 'Account already verified.'
-            });
-        }
-
-        if (user.otp !== otp) {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid OTP.'
-            });
-        }
-
-        if (user.otp_expiry < new Date()) {
-            return res.status(400).json({
-                success: false,
-                message: 'OTP expired.'
-            });
-        }
-
-        user.is_verified = true;
-        user.otp = null;
-        user.otp_expiry = null;
-
-        await user.save();
-
-        res.status(200).json({
-            success: true,
-            message: 'Account verified successfully.'
-        });
-
-    } catch (error) {
-
-        console.error('OTP Error:', error);
-
-        res.status(500).json({
-            success: false,
-            message: 'Server error.'
-        });
-
-    }
-};
-
-// LOGIN
-exports.login = async (req, res) => {
-
-    try {
-
-        const { email, password } = req.body;
-
-        if (!email || !password) {
-            return res.status(400).json({
-                success: false,
-                message: 'Email and password are required'
-            });
-        }
-
-        const user = await User.findOne({ email });
-
-        if (!user) {
-            return res.status(404).json({
-                success: false,
->>>>>>> c8d253e42948387cc2b63c3a380d721522c9d061
                 message: 'User not found'
             });
 
@@ -391,12 +270,8 @@ exports.login = async (req, res) => {
 
         res.status(200).json({
             success: true,
-<<<<<<< HEAD
             message: 'Login successful',
             token
-=======
-            message: 'Login successful'
->>>>>>> c8d253e42948387cc2b63c3a380d721522c9d061
         });
 
     } catch (error) {
@@ -409,9 +284,5 @@ exports.login = async (req, res) => {
         });
 
     }
-<<<<<<< HEAD
 
 };
-=======
-};
->>>>>>> c8d253e42948387cc2b63c3a380d721522c9d061

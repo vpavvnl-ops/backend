@@ -486,3 +486,81 @@ exports.getProfile = async (req, res) => {
     }
 
 };
+
+// CHANGE PASSWORD
+exports.changePassword = async (req, res) => {
+
+    try {
+
+        const userId = req.user.userId;
+
+        const {
+            oldPassword,
+            newPassword
+        } = req.body;
+
+        if (!oldPassword || !newPassword) {
+
+            return res.status(400).json({
+                success: false,
+                message: 'Old password and new password are required'
+            });
+
+        }
+
+        const user = await User.findById(userId);
+
+        if (!user) {
+
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+
+        }
+
+        // Check Old Password
+        const isMatch = await bcrypt.compare(
+            oldPassword,
+            user.password
+        );
+
+        if (!isMatch) {
+
+            return res.status(400).json({
+                success: false,
+                message: 'Old password is incorrect'
+            });
+
+        }
+
+        // Hash New Password
+        const salt = await bcrypt.genSalt(10);
+
+        const hashedPassword = await bcrypt.hash(
+            newPassword,
+            salt
+        );
+
+        // Update Password
+        user.password = hashedPassword;
+
+        await user.save();
+
+        res.status(200).json({
+            success: true,
+            message: 'Password changed successfully'
+        });
+
+    } catch (error) {
+
+        console.log(error);
+
+        res.status(500).json({
+            success: false,
+            message: 'Server Error'
+        });
+
+    }
+
+};

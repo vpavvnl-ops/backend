@@ -25,4 +25,11 @@ router.get(
     authController.getProfile
 );
 
+// CHANGE PASSWORD (PROTECTED)
+router.post(
+    '/change-password',
+    verifyToken,
+    authController.changePassword
+);
+
 module.exports = router;

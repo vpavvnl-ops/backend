@@ -3,49 +3,105 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const path = require('path');
 
 const authRoutes = require('./routes/authRoutes');
 
 const app = express();
 
-// CORS Middleware
+
+// =====================================
+// MIDDLEWARE
+// =====================================
+
+// CORS
 app.use(cors());
 
-// JSON Middleware
+// JSON
 app.use(express.json());
 
-// MongoDB Connection
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => {
-    console.log('✅ MongoDB Connected Successfully');
-  })
-  .catch((err) => {
-    console.error('❌ MongoDB Connection Error:', err);
-  });
+// STATIC UPLOADS
+app.use(
+    '/uploads',
+    express.static(
+        path.join(__dirname, 'uploads')
+    )
+);
 
-// Test Route
-app.get('/', (req, res) => {
-  res.send('Backend Running Successfully');
+
+// =====================================
+// MONGODB CONNECTION
+// =====================================
+
+mongoose.connect(process.env.MONGO_URI)
+
+.then(() => {
+
+    console.log(
+        '✅ MongoDB Connected Successfully'
+    );
+
+})
+
+.catch((err) => {
+
+    console.error(
+        '❌ MongoDB Connection Error:',
+        err
+    );
+
 });
 
-// Auth Routes
+
+// =====================================
+// TEST ROUTE
+// =====================================
+
+app.get('/', (req, res) => {
+
+    res.send(
+        '🚀 Backend Running Successfully'
+    );
+
+});
+
+
+// =====================================
+// AUTH ROUTES
+// =====================================
+
 app.use('/api/auth', authRoutes);
 
-// Global Error Handler
+
+// =====================================
+// GLOBAL ERROR HANDLER
+// =====================================
+
 app.use((err, req, res, next) => {
 
-  console.error(err.stack);
+    console.error(err.stack);
 
-  res.status(500).json({
-    success: false,
-    message: 'Internal Server Error'
-  });
+    res.status(500).json({
+
+        success: false,
+        message: 'Internal Server Error',
+        error: err.message
+
+    });
 
 });
 
-// Server Start
+
+// =====================================
+// SERVER START
+// =====================================
+
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+
+    console.log(
+        `🚀 Server running on port ${PORT}`
+    );
+
 });

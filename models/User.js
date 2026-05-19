@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
 
+    // BASIC DETAILS
     username: {
         type: String,
         required: true,
@@ -21,6 +22,7 @@ const userSchema = new mongoose.Schema({
         required: true
     },
 
+    // REFERRAL SYSTEM
     referral_code: {
         type: String,
         required: true,
@@ -73,22 +75,44 @@ const userSchema = new mongoose.Schema({
         default: 0
     },
 
+    // TOTAL INCOME
     total_income: {
         type: Number,
         default: 0
     },
 
+    // TODAY INCOME
+    today_income: {
+        type: Number,
+        default: 0
+    },
+
+    // MONTHLY INCOME
+    monthly_income: {
+        type: Number,
+        default: 0
+    },
+
+    // DIRECT INCOME
     direct_income: {
         type: Number,
         default: 0
     },
 
+    // LEVEL INCOME
     level_income: {
         type: Number,
         default: 0
     },
 
+    // REWARD INCOME
     reward_income: {
+        type: Number,
+        default: 0
+    },
+
+    // OFFER INCOME
+    offer_income: {
         type: Number,
         default: 0
     },
@@ -117,10 +141,12 @@ const userSchema = new mongoose.Schema({
     }
 
 }, {
+
     timestamps: {
         createdAt: 'created_at',
         updatedAt: 'updated_at'
     }
+
 });
 
 module.exports = mongoose.model('User', userSchema);

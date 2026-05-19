@@ -3,7 +3,11 @@ const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 
+
+// =====================================
 // REGISTER
+// =====================================
+
 exports.register = async (req, res) => {
 
     try {
@@ -144,7 +148,11 @@ exports.register = async (req, res) => {
 
 };
 
+
+// =====================================
 // VERIFY REFERRAL
+// =====================================
+
 exports.verifyReferral = async (req, res) => {
 
     try {
@@ -205,7 +213,11 @@ exports.verifyReferral = async (req, res) => {
 
 };
 
+
+// =====================================
 // VERIFY OTP
+// =====================================
+
 exports.verifyOtp = async (req, res) => {
 
     try {
@@ -283,7 +295,11 @@ exports.verifyOtp = async (req, res) => {
 
 };
 
+
+// =====================================
 // RESEND OTP
+// =====================================
+
 exports.resendOtp = async (req, res) => {
 
     try {
@@ -349,7 +365,11 @@ exports.resendOtp = async (req, res) => {
 
 };
 
+
+// =====================================
 // LOGIN
+// =====================================
+
 exports.login = async (req, res) => {
 
     try {
@@ -441,7 +461,11 @@ exports.login = async (req, res) => {
 
 };
 
+
+// =====================================
 // FORGOT PASSWORD
+// =====================================
+
 exports.forgotPassword = async (req, res) => {
 
     try {
@@ -498,7 +522,11 @@ exports.forgotPassword = async (req, res) => {
 
 };
 
+
+// =====================================
 // RESET PASSWORD
+// =====================================
+
 exports.resetPassword = async (req, res) => {
 
     try {
@@ -583,7 +611,11 @@ exports.resetPassword = async (req, res) => {
 
 };
 
+
+// =====================================
 // DASHBOARD API
+// =====================================
+
 exports.dashboard = async (req, res) => {
 
     try {
@@ -670,9 +702,12 @@ exports.dashboard = async (req, res) => {
                 wallet: {
                     wallet_balance: user.wallet_balance,
                     total_income: user.total_income,
+                    today_income: user.today_income,
+                    monthly_income: user.monthly_income,
                     direct_income: user.direct_income,
                     level_income: user.level_income,
-                    reward_income: user.reward_income
+                    reward_income: user.reward_income,
+                    offer_income: user.offer_income
                 },
 
                 team: {
@@ -700,7 +735,89 @@ exports.dashboard = async (req, res) => {
 
 };
 
+
+// =====================================
+// WALLET API
+// =====================================
+
+exports.wallet = async (req, res) => {
+
+    try {
+
+        const userId = req.user.userId;
+
+        const user = await User.findById(userId)
+        .select(`
+            wallet_balance
+            total_income
+            today_income
+            monthly_income
+            direct_income
+            level_income
+            reward_income
+            offer_income
+            updated_at
+        `);
+
+        if (!user) {
+
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+
+        }
+
+        res.status(200).json({
+
+            success: true,
+
+            wallet: {
+
+                wallet_balance: user.wallet_balance,
+
+                income: {
+
+                    today_income: user.today_income,
+
+                    monthly_income: user.monthly_income,
+
+                    total_income: user.total_income,
+
+                    direct_income: user.direct_income,
+
+                    level_income: user.level_income,
+
+                    reward_income: user.reward_income,
+
+                    offer_income: user.offer_income
+
+                },
+
+                last_updated: user.updated_at
+
+            }
+
+        });
+
+    } catch (error) {
+
+        console.log(error);
+
+        res.status(500).json({
+            success: false,
+            message: 'Server Error'
+        });
+
+    }
+
+};
+
+
+// =====================================
 // GET PROFILE
+// =====================================
+
 exports.getProfile = async (req, res) => {
 
     try {
@@ -737,7 +854,11 @@ exports.getProfile = async (req, res) => {
 
 };
 
+
+// =====================================
 // CHANGE PASSWORD
+// =====================================
+
 exports.changePassword = async (req, res) => {
 
     try {
@@ -812,7 +933,11 @@ exports.changePassword = async (req, res) => {
 
 };
 
+
+// =====================================
 // LOGOUT
+// =====================================
+
 exports.logout = async (req, res) => {
 
     try {

@@ -10,6 +10,8 @@ const {
 // AUTH ROUTES
 router.post('/register', authController.register);
 
+router.post('/verify-referral', authController.verifyReferral);
+
 router.post('/verify-otp', authController.verifyOtp);
 
 router.post('/resend-otp', authController.resendOtp);

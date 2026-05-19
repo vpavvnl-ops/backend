@@ -133,6 +133,67 @@ exports.register = async (req, res) => {
 
 };
 
+// VERIFY REFERRAL
+exports.verifyReferral = async (req, res) => {
+
+    try {
+
+        const { referral_code } = req.body;
+
+        if (!referral_code) {
+
+            return res.status(400).json({
+                success: false,
+                message: 'Referral code is required'
+            });
+
+        }
+
+        // ADMIN REFERRAL SUPPORT
+        if (referral_code === "ADMIN123") {
+
+            return res.status(200).json({
+                success: true,
+                message: 'Referral code verified successfully',
+                upline_name: 'Admin',
+                referral_code: 'ADMIN123'
+            });
+
+        }
+
+        const user = await User.findOne({
+            referral_code
+        });
+
+        if (!user) {
+
+            return res.status(404).json({
+                success: false,
+                message: 'Invalid referral code'
+            });
+
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: 'Referral code verified successfully',
+            upline_name: user.username,
+            referral_code: user.referral_code
+        });
+
+    } catch (error) {
+
+        console.log(error);
+
+        return res.status(500).json({
+            success: false,
+            message: 'Server Error'
+        });
+
+    }
+
+};
+
 // VERIFY OTP
 exports.verifyOtp = async (req, res) => {
 

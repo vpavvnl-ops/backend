@@ -238,7 +238,6 @@ exports.resendOtp = async (req, res) => {
 
         }
 
-        // Check already verified
         if (user.is_verified) {
 
             return res.status(400).json({
@@ -467,7 +466,6 @@ exports.resetPassword = async (req, res) => {
 
         }
 
-        // OTP Check
         if (user.otp !== otp) {
 
             return res.status(400).json({
@@ -477,7 +475,6 @@ exports.resetPassword = async (req, res) => {
 
         }
 
-        // OTP Expiry Check
         if (user.otp_expiry < new Date()) {
 
             return res.status(400).json({
@@ -591,7 +588,6 @@ exports.changePassword = async (req, res) => {
 
         }
 
-        // Check Old Password
         const isMatch = await bcrypt.compare(
             oldPassword,
             user.password
@@ -622,6 +618,29 @@ exports.changePassword = async (req, res) => {
         res.status(200).json({
             success: true,
             message: 'Password changed successfully'
+        });
+
+    } catch (error) {
+
+        console.log(error);
+
+        res.status(500).json({
+            success: false,
+            message: 'Server Error'
+        });
+
+    }
+
+};
+
+// LOGOUT
+exports.logout = async (req, res) => {
+
+    try {
+
+        res.status(200).json({
+            success: true,
+            message: 'Logout successful'
         });
 
     } catch (error) {

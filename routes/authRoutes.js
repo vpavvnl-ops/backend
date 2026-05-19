@@ -34,4 +34,11 @@ router.post(
     authController.changePassword
 );
 
+// LOGOUT (PROTECTED)
+router.post(
+    '/logout',
+    verifyToken,
+    authController.logout
+);
+
 module.exports = router;

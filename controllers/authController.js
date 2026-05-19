@@ -20,7 +20,6 @@ exports.register = async (req, res) => {
             referral_id
         } = req.body;
 
-        // VALIDATION
         if (
             !username ||
             !email ||
@@ -36,7 +35,6 @@ exports.register = async (req, res) => {
 
         }
 
-        // PASSWORD MATCH
         if (password !== confirm_password) {
 
             return res.status(400).json({
@@ -46,7 +44,6 @@ exports.register = async (req, res) => {
 
         }
 
-        // CHECK EXISTING USER
         const existingUser = await User.findOne({ email });
 
         if (existingUser) {
@@ -58,7 +55,6 @@ exports.register = async (req, res) => {
 
         }
 
-        // REFERRAL CHECK
         let referringUser = null;
 
         if (referral_id !== 'ADMIN123') {
@@ -78,7 +74,6 @@ exports.register = async (req, res) => {
 
         }
 
-        // HASH PASSWORD
         const salt = await bcrypt.genSalt(10);
 
         const hashedPassword = await bcrypt.hash(
@@ -86,7 +81,6 @@ exports.register = async (req, res) => {
             salt
         );
 
-        // GENERATE REFERRAL CODE
         const generateReferralCode = () =>
             `USER${crypto.randomBytes(3)
             .toString('hex')
@@ -104,15 +98,12 @@ exports.register = async (req, res) => {
 
         }
 
-        // OTP
         const otp = '123456';
 
-        // OTP EXPIRY
         const otp_expiry = new Date(
             Date.now() + 5 * 60 * 1000
         );
 
-        // CREATE USER
         const newUser = new User({
             username,
             email,
@@ -168,7 +159,6 @@ exports.verifyReferral = async (req, res) => {
 
         }
 
-        // ADMIN REFERRAL
         if (referral_code === 'ADMIN123') {
 
             return res.status(200).json({
@@ -419,12 +409,10 @@ exports.login = async (req, res) => {
 
         }
 
-        // UPDATE LAST LOGIN
         user.last_login = new Date();
 
         await user.save();
 
-        // JWT TOKEN
         const token = jwt.sign(
             {
                 userId: user._id,
@@ -622,7 +610,6 @@ exports.dashboard = async (req, res) => {
 
         const userId = req.user.userId;
 
-        // CURRENT USER
         const user = await User.findById(userId)
         .select('-password -otp -otp_expiry');
 
@@ -635,21 +622,13 @@ exports.dashboard = async (req, res) => {
 
         }
 
-        // DIRECT TEAM USERS
         const directTeamUsers = await User.find({
             referred_by: user._id
         })
         .select('username email referral_code created_at');
 
-        // DIRECT TEAM COUNT
         const directTeamCount = directTeamUsers.length;
 
-        // TOTAL TEAM COUNT
-        const totalTeamCount = await User.countDocuments({
-            referred_by: user._id
-        });
-
-        // UPLINE DETAILS
         let uplineDetails = null;
 
         if (user.referred_by) {
@@ -671,15 +650,6 @@ exports.dashboard = async (req, res) => {
 
         }
 
-        // PROFILE COMPLETION
-        let profileCompletion = 60;
-
-        if (user.username) profileCompletion += 10;
-        if (user.email) profileCompletion += 10;
-        if (user.mobile) profileCompletion += 10;
-        if (user.profile_image) profileCompletion += 10;
-
-        // RESPONSE
         res.status(200).json({
 
             success: true,
@@ -696,7 +666,7 @@ exports.dashboard = async (req, res) => {
                     rank: user.rank,
                     join_date: user.created_at,
                     last_login: user.last_login,
-                    profile_completion: `${profileCompletion}%`
+                    kyc_status: user.kyc_status
                 },
 
                 wallet: {
@@ -712,7 +682,6 @@ exports.dashboard = async (req, res) => {
 
                 team: {
                     direct_team_count: directTeamCount,
-                    total_team_count: totalTeamCount,
                     direct_team_users: directTeamUsers
                 },
 
@@ -746,18 +715,7 @@ exports.wallet = async (req, res) => {
 
         const userId = req.user.userId;
 
-        const user = await User.findById(userId)
-        .select(`
-            wallet_balance
-            total_income
-            today_income
-            monthly_income
-            direct_income
-            level_income
-            reward_income
-            offer_income
-            updated_at
-        `);
+        const user = await User.findById(userId);
 
         if (!user) {
 
@@ -798,6 +756,188 @@ exports.wallet = async (req, res) => {
 
             }
 
+        });
+
+    } catch (error) {
+
+        console.log(error);
+
+        res.status(500).json({
+            success: false,
+            message: 'Server Error'
+        });
+
+    }
+
+};
+
+
+// =====================================
+// ADVANCED KYC UPDATE
+// =====================================
+
+exports.updateKyc = async (req, res) => {
+
+    try {
+
+        const userId = req.user.userId;
+
+        const {
+            full_name,
+            aadhaar_number,
+            pan_number,
+            bank_name,
+            account_number,
+            ifsc_code
+        } = req.body;
+
+        const user = await User.findById(userId);
+
+        if (!user) {
+
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+
+        }
+
+        user.full_name = full_name;
+        user.aadhaar_number = aadhaar_number;
+        user.pan_number = pan_number;
+        user.bank_name = bank_name;
+        user.account_number = account_number;
+        user.ifsc_code = ifsc_code;
+
+        if (req.files['aadhaar_front_image']) {
+
+            user.aadhaar_front_image =
+                req.files['aadhaar_front_image'][0].path;
+
+        }
+
+        if (req.files['aadhaar_back_image']) {
+
+            user.aadhaar_back_image =
+                req.files['aadhaar_back_image'][0].path;
+
+        }
+
+        if (req.files['pan_card_image']) {
+
+            user.pan_card_image =
+                req.files['pan_card_image'][0].path;
+
+        }
+
+        if (req.files['selfie_image']) {
+
+            user.selfie_image =
+                req.files['selfie_image'][0].path;
+
+        }
+
+        if (req.files['self_auth_image']) {
+
+            user.self_auth_image =
+                req.files['self_auth_image'][0].path;
+
+        }
+
+        if (req.files['signature_image']) {
+
+            user.signature_image =
+                req.files['signature_image'][0].path;
+
+        }
+
+        user.kyc_status = 'Pending';
+
+        await user.save();
+
+        res.status(200).json({
+
+            success: true,
+            message: 'Advanced KYC submitted successfully',
+            kyc_status: user.kyc_status,
+
+            documents: {
+
+                aadhaar_front_image:
+                    user.aadhaar_front_image,
+
+                aadhaar_back_image:
+                    user.aadhaar_back_image,
+
+                pan_card_image:
+                    user.pan_card_image,
+
+                selfie_image:
+                    user.selfie_image,
+
+                self_auth_image:
+                    user.self_auth_image,
+
+                signature_image:
+                    user.signature_image
+
+            }
+
+        });
+
+    } catch (error) {
+
+        console.log(error);
+
+        res.status(500).json({
+            success: false,
+            message: 'Server Error'
+        });
+
+    }
+
+};
+
+
+// =====================================
+// GET KYC DETAILS
+// =====================================
+
+exports.getKyc = async (req, res) => {
+
+    try {
+
+        const userId = req.user.userId;
+
+        const user = await User.findById(userId)
+        .select(`
+            full_name
+            aadhaar_number
+            pan_number
+            bank_name
+            account_number
+            ifsc_code
+            aadhaar_front_image
+            aadhaar_back_image
+            pan_card_image
+            selfie_image
+            self_auth_image
+            signature_image
+            kyc_status
+        `);
+
+        if (!user) {
+
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+
+        }
+
+        res.status(200).json({
+            success: true,
+            kyc: user
         });
 
     } catch (error) {

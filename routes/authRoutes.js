@@ -7,6 +7,8 @@ const {
     verifyToken
 } = require('../middleware/authMiddleware');
 
+const upload = require('../middleware/uploadMiddleware');
+
 
 // =====================================
 // AUTH ROUTES
@@ -74,6 +76,61 @@ router.get(
     '/wallet',
     verifyToken,
     authController.wallet
+);
+
+
+// =====================================
+// ADVANCED KYC (PROTECTED)
+// =====================================
+
+// UPDATE KYC
+router.post(
+    '/update-kyc',
+    verifyToken,
+
+    upload.fields([
+
+        {
+            name: 'aadhaar_front_image',
+            maxCount: 1
+        },
+
+        {
+            name: 'aadhaar_back_image',
+            maxCount: 1
+        },
+
+        {
+            name: 'pan_card_image',
+            maxCount: 1
+        },
+
+        {
+            name: 'selfie_image',
+            maxCount: 1
+        },
+
+        {
+            name: 'self_auth_image',
+            maxCount: 1
+        },
+
+        {
+            name: 'signature_image',
+            maxCount: 1
+        }
+
+    ]),
+
+    authController.updateKyc
+);
+
+
+// GET KYC
+router.get(
+    '/get-kyc',
+    verifyToken,
+    authController.getKyc
 );
 
 

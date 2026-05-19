@@ -2,7 +2,10 @@ const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
 
+    // =====================================
     // BASIC DETAILS
+    // =====================================
+
     username: {
         type: String,
         required: true,
@@ -22,7 +25,21 @@ const userSchema = new mongoose.Schema({
         required: true
     },
 
+    mobile: {
+        type: String,
+        default: ''
+    },
+
+    profile_image: {
+        type: String,
+        default: ''
+    },
+
+
+    // =====================================
     // REFERRAL SYSTEM
+    // =====================================
+
     referral_code: {
         type: String,
         required: true,
@@ -35,7 +52,21 @@ const userSchema = new mongoose.Schema({
         default: null
     },
 
-    // OTP
+    direct_team_count: {
+        type: Number,
+        default: 0
+    },
+
+    total_team_count: {
+        type: Number,
+        default: 0
+    },
+
+
+    // =====================================
+    // OTP SYSTEM
+    // =====================================
+
     otp: {
         type: String,
         default: null
@@ -46,7 +77,11 @@ const userSchema = new mongoose.Schema({
         default: null
     },
 
+
+    // =====================================
     // ACCOUNT STATUS
+    // =====================================
+
     is_verified: {
         type: Boolean,
         default: false
@@ -58,83 +93,152 @@ const userSchema = new mongoose.Schema({
         default: 'Active'
     },
 
-    // PROFILE
-    mobile: {
-        type: String,
-        default: ''
-    },
 
-    profile_image: {
-        type: String,
-        default: ''
-    },
+    // =====================================
+    // WALLET SYSTEM
+    // =====================================
 
-    // WALLET
     wallet_balance: {
         type: Number,
         default: 0
     },
 
-    // TOTAL INCOME
     total_income: {
         type: Number,
         default: 0
     },
 
-    // TODAY INCOME
     today_income: {
         type: Number,
         default: 0
     },
 
-    // MONTHLY INCOME
     monthly_income: {
         type: Number,
         default: 0
     },
 
-    // DIRECT INCOME
     direct_income: {
         type: Number,
         default: 0
     },
 
-    // LEVEL INCOME
     level_income: {
         type: Number,
         default: 0
     },
 
-    // REWARD INCOME
     reward_income: {
         type: Number,
         default: 0
     },
 
-    // OFFER INCOME
     offer_income: {
         type: Number,
         default: 0
     },
 
-    // TEAM
-    direct_team_count: {
-        type: Number,
-        default: 0
-    },
 
-    total_team_count: {
-        type: Number,
-        default: 0
-    },
+    // =====================================
+    // RANK SYSTEM
+    // =====================================
 
-    // RANK
     rank: {
         type: String,
         default: 'Starter'
     },
 
+
+    // =====================================
+    // ADVANCED KYC DETAILS
+    // =====================================
+
+    full_name: {
+        type: String,
+        default: ''
+    },
+
+    aadhaar_number: {
+        type: String,
+        default: ''
+    },
+
+    pan_number: {
+        type: String,
+        default: ''
+    },
+
+    bank_name: {
+        type: String,
+        default: ''
+    },
+
+    account_number: {
+        type: String,
+        default: ''
+    },
+
+    ifsc_code: {
+        type: String,
+        default: ''
+    },
+
+
+    // =====================================
+    // KYC DOCUMENTS
+    // =====================================
+
+    aadhaar_front_image: {
+        type: String,
+        default: ''
+    },
+
+    aadhaar_back_image: {
+        type: String,
+        default: ''
+    },
+
+    pan_card_image: {
+        type: String,
+        default: ''
+    },
+
+    selfie_image: {
+        type: String,
+        default: ''
+    },
+
+    self_auth_image: {
+        type: String,
+        default: ''
+    },
+
+    signature_image: {
+        type: String,
+        default: ''
+    },
+
+
+    // =====================================
+    // KYC STATUS
+    // =====================================
+
+    kyc_status: {
+        type: String,
+        enum: [
+            'Not Submitted',
+            'Pending',
+            'Approved',
+            'Rejected'
+        ],
+        default: 'Not Submitted'
+    },
+
+
+    // =====================================
     // LOGIN DETAILS
+    // =====================================
+
     last_login: {
         type: Date,
         default: null

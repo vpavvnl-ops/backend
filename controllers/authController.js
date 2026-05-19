@@ -71,6 +71,7 @@ exports.register = async (req, res) => {
                 });
 
             }
+
         }
 
         // Password Hash
@@ -91,11 +92,9 @@ exports.register = async (req, res) => {
         }
 
         // Generate OTP
-        const otp = "123456"
-        //Math.floor(
-            //100000 + Math.random() * 900000
-        //).toString();
+        const otp = "123456";
 
+        // OTP Expiry
         const otp_expiry = new Date(
             Date.now() + 5 * 60 * 1000
         );
@@ -249,10 +248,7 @@ exports.resendOtp = async (req, res) => {
         }
 
         // Generate New OTP
-        const otp = 
-        //Math.floor(
-            //100000 + Math.random() * 900000
-        //).toString();
+        const otp = "123456";
 
         // OTP Expiry
         const otp_expiry = new Date(
@@ -399,10 +395,7 @@ exports.forgotPassword = async (req, res) => {
         }
 
         // Generate OTP
-        const otp = "123456"
-        //Math.floor(
-            // 100000 + Math.random() * 900000
-        //).toString();
+        const otp = "123456";
 
         // OTP Expiry
         const otp_expiry = new Date(

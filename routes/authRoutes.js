@@ -7,40 +7,96 @@ const {
     verifyToken
 } = require('../middleware/authMiddleware');
 
+
+// =============================
 // AUTH ROUTES
-router.post('/register', authController.register);
+// =============================
 
-router.post('/verify-referral', authController.verifyReferral);
+// REGISTER
+router.post(
+    '/register',
+    authController.register
+);
 
-router.post('/verify-otp', authController.verifyOtp);
+// VERIFY REFERRAL
+router.post(
+    '/verify-referral',
+    authController.verifyReferral
+);
 
-router.post('/resend-otp', authController.resendOtp);
+// VERIFY OTP
+router.post(
+    '/verify-otp',
+    authController.verifyOtp
+);
 
-router.post('/login', authController.login);
+// RESEND OTP
+router.post(
+    '/resend-otp',
+    authController.resendOtp
+);
 
-router.post('/forgot-password', authController.forgotPassword);
+// LOGIN
+router.post(
+    '/login',
+    authController.login
+);
 
-router.post('/reset-password', authController.resetPassword);
+// FORGOT PASSWORD
+router.post(
+    '/forgot-password',
+    authController.forgotPassword
+);
 
+// RESET PASSWORD
+router.post(
+    '/reset-password',
+    authController.resetPassword
+);
+
+
+// =============================
+// DASHBOARD (PROTECTED)
+// =============================
+
+router.get(
+    '/dashboard',
+    verifyToken,
+    authController.dashboard
+);
+
+
+// =============================
 // USER PROFILE (PROTECTED)
+// =============================
+
 router.get(
     '/profile',
     verifyToken,
     authController.getProfile
 );
 
+
+// =============================
 // CHANGE PASSWORD (PROTECTED)
+// =============================
+
 router.post(
     '/change-password',
     verifyToken,
     authController.changePassword
 );
 
+
+// =============================
 // LOGOUT (PROTECTED)
+// =============================
+
 router.post(
     '/logout',
     verifyToken,
     authController.logout
 );
+
 
 module.exports = router;

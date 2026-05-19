@@ -16,7 +16,7 @@ exports.register = async (req, res) => {
             referral_id
         } = req.body;
 
-        // Validation
+        // VALIDATION
         if (
             !username ||
             !email ||
@@ -32,7 +32,7 @@ exports.register = async (req, res) => {
 
         }
 
-        // Password Match
+        // PASSWORD MATCH
         if (password !== confirm_password) {
 
             return res.status(400).json({
@@ -42,22 +42,22 @@ exports.register = async (req, res) => {
 
         }
 
-        // Existing User Check
+        // CHECK EXISTING USER
         const existingUser = await User.findOne({ email });
 
         if (existingUser) {
 
             return res.status(409).json({
                 success: false,
-                message: 'Email is already registered.'
+                message: 'Email already registered.'
             });
 
         }
 
-        // Referral Check
+        // REFERRAL CHECK
         let referringUser = null;
 
-        if (referral_id !== "ADMIN123") {
+        if (referral_id !== 'ADMIN123') {
 
             referringUser = await User.findOne({
                 referral_code: referral_id
@@ -74,38 +74,49 @@ exports.register = async (req, res) => {
 
         }
 
-        // Password Hash
+        // HASH PASSWORD
         const salt = await bcrypt.genSalt(10);
 
-        const hashedPassword = await bcrypt.hash(password, salt);
+        const hashedPassword = await bcrypt.hash(
+            password,
+            salt
+        );
 
-        // Generate Referral Code
+        // GENERATE REFERRAL CODE
         const generateReferralCode = () =>
-            `USER${crypto.randomBytes(3).toString('hex').toUpperCase()}`;
+            `USER${crypto.randomBytes(3)
+            .toString('hex')
+            .toUpperCase()}`;
 
         let newReferralCode = generateReferralCode();
 
-        while (await User.findOne({ referral_code: newReferralCode })) {
+        while (
+            await User.findOne({
+                referral_code: newReferralCode
+            })
+        ) {
 
             newReferralCode = generateReferralCode();
 
         }
 
-        // Generate OTP
-        const otp = "123456";
+        // OTP
+        const otp = '123456';
 
-        // OTP Expiry
+        // OTP EXPIRY
         const otp_expiry = new Date(
             Date.now() + 5 * 60 * 1000
         );
 
-        // Create User
+        // CREATE USER
         const newUser = new User({
             username,
             email,
             password: hashedPassword,
             referral_code: newReferralCode,
-            referred_by: referringUser ? referringUser._id : null,
+            referred_by: referringUser
+                ? referringUser._id
+                : null,
             otp,
             otp_expiry,
             is_verified: false
@@ -122,11 +133,11 @@ exports.register = async (req, res) => {
 
     } catch (error) {
 
-        console.error('Registration Error:', error);
+        console.log(error);
 
         res.status(500).json({
             success: false,
-            message: 'Server error during registration.'
+            message: 'Server Error'
         });
 
     }
@@ -149,8 +160,8 @@ exports.verifyReferral = async (req, res) => {
 
         }
 
-        // ADMIN REFERRAL SUPPORT
-        if (referral_code === "ADMIN123") {
+        // ADMIN REFERRAL
+        if (referral_code === 'ADMIN123') {
 
             return res.status(200).json({
                 success: true,
@@ -174,7 +185,7 @@ exports.verifyReferral = async (req, res) => {
 
         }
 
-        return res.status(200).json({
+        res.status(200).json({
             success: true,
             message: 'Referral code verified successfully',
             upline_name: user.username,
@@ -185,7 +196,7 @@ exports.verifyReferral = async (req, res) => {
 
         console.log(error);
 
-        return res.status(500).json({
+        res.status(500).json({
             success: false,
             message: 'Server Error'
         });
@@ -261,11 +272,11 @@ exports.verifyOtp = async (req, res) => {
 
     } catch (error) {
 
-        console.error('OTP Error:', error);
+        console.log(error);
 
         res.status(500).json({
             success: false,
-            message: 'Server error.'
+            message: 'Server Error'
         });
 
     }
@@ -308,15 +319,12 @@ exports.resendOtp = async (req, res) => {
 
         }
 
-        // Generate New OTP
-        const otp = "123456";
+        const otp = '123456';
 
-        // OTP Expiry
         const otp_expiry = new Date(
             Date.now() + 5 * 60 * 1000
         );
 
-        // Save OTP
         user.otp = otp;
         user.otp_expiry = otp_expiry;
 
@@ -391,6 +399,11 @@ exports.login = async (req, res) => {
 
         }
 
+        // UPDATE LAST LOGIN
+        user.last_login = new Date();
+
+        await user.save();
+
         // JWT TOKEN
         const token = jwt.sign(
             {
@@ -417,18 +430,18 @@ exports.login = async (req, res) => {
 
     } catch (error) {
 
-        console.error('Login Error:', error);
+        console.log(error);
 
         res.status(500).json({
             success: false,
-            message: 'Server error during login'
+            message: 'Server Error'
         });
 
     }
 
 };
 
-// FORGOT PASSWORD OTP SEND
+// FORGOT PASSWORD
 exports.forgotPassword = async (req, res) => {
 
     try {
@@ -455,15 +468,12 @@ exports.forgotPassword = async (req, res) => {
 
         }
 
-        // Generate OTP
-        const otp = "123456";
+        const otp = '123456';
 
-        // OTP Expiry
         const otp_expiry = new Date(
             Date.now() + 5 * 60 * 1000
         );
 
-        // Save OTP
         user.otp = otp;
         user.otp_expiry = otp_expiry;
 
@@ -488,7 +498,7 @@ exports.forgotPassword = async (req, res) => {
 
 };
 
-// RESET PASSWORD WITH OTP
+// RESET PASSWORD
 exports.resetPassword = async (req, res) => {
 
     try {
@@ -541,7 +551,6 @@ exports.resetPassword = async (req, res) => {
 
         }
 
-        // Hash Password
         const salt = await bcrypt.genSalt(10);
 
         const hashedPassword = await bcrypt.hash(
@@ -549,10 +558,8 @@ exports.resetPassword = async (req, res) => {
             salt
         );
 
-        // Update Password
         user.password = hashedPassword;
 
-        // Clear OTP
         user.otp = null;
         user.otp_expiry = null;
 
@@ -576,7 +583,124 @@ exports.resetPassword = async (req, res) => {
 
 };
 
-// GET USER PROFILE
+// DASHBOARD API
+exports.dashboard = async (req, res) => {
+
+    try {
+
+        const userId = req.user.userId;
+
+        // CURRENT USER
+        const user = await User.findById(userId)
+        .select('-password -otp -otp_expiry');
+
+        if (!user) {
+
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+
+        }
+
+        // DIRECT TEAM USERS
+        const directTeamUsers = await User.find({
+            referred_by: user._id
+        })
+        .select('username email referral_code created_at');
+
+        // DIRECT TEAM COUNT
+        const directTeamCount = directTeamUsers.length;
+
+        // TOTAL TEAM COUNT
+        const totalTeamCount = await User.countDocuments({
+            referred_by: user._id
+        });
+
+        // UPLINE DETAILS
+        let uplineDetails = null;
+
+        if (user.referred_by) {
+
+            const upline = await User.findById(
+                user.referred_by
+            )
+            .select('username email referral_code');
+
+            if (upline) {
+
+                uplineDetails = {
+                    username: upline.username,
+                    email: upline.email,
+                    referral_code: upline.referral_code
+                };
+
+            }
+
+        }
+
+        // PROFILE COMPLETION
+        let profileCompletion = 60;
+
+        if (user.username) profileCompletion += 10;
+        if (user.email) profileCompletion += 10;
+        if (user.mobile) profileCompletion += 10;
+        if (user.profile_image) profileCompletion += 10;
+
+        // RESPONSE
+        res.status(200).json({
+
+            success: true,
+
+            dashboard: {
+
+                profile: {
+                    username: user.username,
+                    email: user.email,
+                    mobile: user.mobile,
+                    referral_code: user.referral_code,
+                    is_verified: user.is_verified,
+                    status: user.status,
+                    rank: user.rank,
+                    join_date: user.created_at,
+                    last_login: user.last_login,
+                    profile_completion: `${profileCompletion}%`
+                },
+
+                wallet: {
+                    wallet_balance: user.wallet_balance,
+                    total_income: user.total_income,
+                    direct_income: user.direct_income,
+                    level_income: user.level_income,
+                    reward_income: user.reward_income
+                },
+
+                team: {
+                    direct_team_count: directTeamCount,
+                    total_team_count: totalTeamCount,
+                    direct_team_users: directTeamUsers
+                },
+
+                upline: uplineDetails
+
+            }
+
+        });
+
+    } catch (error) {
+
+        console.log(error);
+
+        res.status(500).json({
+            success: false,
+            message: 'Server Error'
+        });
+
+    }
+
+};
+
+// GET PROFILE
 exports.getProfile = async (req, res) => {
 
     try {
@@ -659,7 +783,6 @@ exports.changePassword = async (req, res) => {
 
         }
 
-        // Hash New Password
         const salt = await bcrypt.genSalt(10);
 
         const hashedPassword = await bcrypt.hash(
@@ -667,7 +790,6 @@ exports.changePassword = async (req, res) => {
             salt
         );
 
-        // Update Password
         user.password = hashedPassword;
 
         await user.save();

@@ -80,6 +80,17 @@ router.get(
 
 
 // =====================================
+// TRANSACTION HISTORY (PROTECTED)
+// =====================================
+
+router.get(
+    '/transaction-history',
+    verifyToken,
+    authController.getTransactionHistory
+);
+
+
+// =====================================
 // ADVANCED KYC (PROTECTED)
 // =====================================
 

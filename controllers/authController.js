@@ -2,6 +2,7 @@ const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
+const Transaction = require('../models/Transaction');
 
 
 // =====================================
@@ -1094,6 +1095,42 @@ exports.logout = async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Server Error'
+        });
+
+    }
+
+};
+// =====================================
+// TRANSACTION HISTORY
+// =====================================
+
+exports.getTransactionHistory = async (req, res) => {
+
+    try {
+
+        const userId = req.user.userId;
+
+        const transactions = await Transaction.find({
+            user: userId
+        }).sort({ createdAt: -1 });
+
+        res.status(200).json({
+
+            success: true,
+
+            count: transactions.length,
+
+            transactions
+
+        });
+
+    } catch (error) {
+
+        console.log(error);
+
+        res.status(500).json({
+            success: false,
+            message: 'Transaction history fetch failed'
         });
 
     }

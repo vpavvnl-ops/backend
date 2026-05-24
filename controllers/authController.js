@@ -1123,6 +1123,121 @@ exports.getTransactionHistory = async (req, res) => {
             transactions
 
         });
+        
+
+// =====================================
+// ADD INCOME + TRANSACTION
+// =====================================
+
+exports.addIncome = async (req, res) => {
+
+    try {
+
+        const userId = req.user.userId;
+
+        const {
+            amount,
+            type,
+            description
+        } = req.body;
+
+        if (!amount || !type) {
+
+            return res.status(400).json({
+                success: false,
+                message: 'Amount and type are required'
+            });
+
+        }
+
+        const user = await User.findById(userId);
+
+        if (!user) {
+
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+
+        }
+
+        // UPDATE WALLET
+
+        user.wallet_balance += Number(amount);
+
+        user.total_income += Number(amount);
+
+        // INCOME TYPE UPDATE
+
+        if (type === 'direct_income') {
+
+            user.direct_income += Number(amount);
+
+        }
+
+        else if (type === 'level_income') {
+
+            user.level_income += Number(amount);
+
+        }
+
+        else if (type === 'reward_income') {
+
+            user.reward_income += Number(amount);
+
+        }
+
+        else if (type === 'offer_income') {
+
+            user.offer_income += Number(amount);
+
+        }
+
+        await user.save();
+
+        // CREATE TRANSACTION
+
+        const transaction = await Transaction.create({
+
+            user: user._id,
+
+            type,
+
+            amount,
+
+            description:
+                description || 'Income added',
+
+            status: 'success'
+
+        });
+
+        res.status(200).json({
+
+            success: true,
+
+            message: 'Income added successfully',
+
+            wallet_balance: user.wallet_balance,
+
+            transaction
+
+        });
+
+    } catch (error) {
+
+        console.log(error);
+
+        res.status(500).json({
+
+            success: false,
+            message: 'Income add failed'
+
+        });
+
+    }
+
+};
 
     } catch (error) {
 

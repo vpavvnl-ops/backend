@@ -55,11 +55,6 @@ router.post(
     '/reset-password',
     authController.resetPassword
 );
-router.post(
-    '/add-income',
-    verifyToken,
-    authController.addIncome
-);
 
 
 // =====================================

@@ -56,6 +56,13 @@ router.post(
     authController.resetPassword
 );
 
+// ADD INCOME
+router.post(
+    '/add-income',
+    verifyToken,
+    authController.addIncome
+);
+
 
 // =====================================
 // DASHBOARD (PROTECTED)
@@ -91,13 +98,13 @@ router.get(
 
 
 // =====================================
-// ADD INCOME (PROTECTED)
+// WITHDRAW REQUEST (PROTECTED)
 // =====================================
 
 router.post(
-    '/add-income',
+    '/withdraw-request',
     verifyToken,
-    authController.addIncome
+    authController.withdrawRequest
 );
 
 
@@ -109,32 +116,41 @@ router.post(
 router.post(
     '/update-kyc',
     verifyToken,
+
     upload.fields([
+
         {
             name: 'aadhaar_front_image',
             maxCount: 1
         },
+
         {
             name: 'aadhaar_back_image',
             maxCount: 1
         },
+
         {
             name: 'pan_card_image',
             maxCount: 1
         },
+
         {
             name: 'selfie_image',
             maxCount: 1
         },
+
         {
             name: 'self_auth_image',
             maxCount: 1
         },
+
         {
             name: 'signature_image',
             maxCount: 1
         }
+
     ]),
+
     authController.updateKyc
 );
 

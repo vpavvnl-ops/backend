@@ -4,15 +4,12 @@ const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const Transaction = require('../models/Transaction');
 
-
 // =====================================
 // REGISTER
 // =====================================
 
 exports.register = async (req, res) => {
-
     try {
-
         const {
             username,
             email,
@@ -28,51 +25,41 @@ exports.register = async (req, res) => {
             !confirm_password ||
             !referral_id
         ) {
-
             return res.status(400).json({
                 success: false,
                 message: 'All fields including Referral ID are required.'
             });
-
         }
 
         if (password !== confirm_password) {
-
             return res.status(400).json({
                 success: false,
                 message: 'Password and Confirm Password do not match.'
             });
-
         }
 
         const existingUser = await User.findOne({ email });
 
         if (existingUser) {
-
             return res.status(409).json({
                 success: false,
                 message: 'Email already registered.'
             });
-
         }
 
         let referringUser = null;
 
         if (referral_id !== 'ADMIN123') {
-
             referringUser = await User.findOne({
                 referral_code: referral_id
             });
 
             if (!referringUser) {
-
                 return res.status(400).json({
                     success: false,
                     message: 'Invalid Referral ID.'
                 });
-
             }
-
         }
 
         const salt = await bcrypt.genSalt(10);
@@ -94,9 +81,7 @@ exports.register = async (req, res) => {
                 referral_code: newReferralCode
             })
         ) {
-
             newReferralCode = generateReferralCode();
-
         }
 
         const otp = '123456';
@@ -128,47 +113,36 @@ exports.register = async (req, res) => {
         });
 
     } catch (error) {
-
         console.log(error);
-
         res.status(500).json({
             success: false,
             message: 'Server Error'
         });
-
     }
-
 };
-
 
 // =====================================
 // VERIFY REFERRAL
 // =====================================
 
 exports.verifyReferral = async (req, res) => {
-
     try {
-
         const { referral_code } = req.body;
 
         if (!referral_code) {
-
             return res.status(400).json({
                 success: false,
                 message: 'Referral code is required'
             });
-
         }
 
         if (referral_code === 'ADMIN123') {
-
             return res.status(200).json({
                 success: true,
                 message: 'Referral code verified successfully',
                 upline_name: 'Admin',
                 referral_code: 'ADMIN123'
             });
-
         }
 
         const user = await User.findOne({
@@ -176,12 +150,10 @@ exports.verifyReferral = async (req, res) => {
         });
 
         if (!user) {
-
             return res.status(404).json({
                 success: false,
                 message: 'Invalid referral code'
             });
-
         }
 
         res.status(200).json({
@@ -192,74 +164,57 @@ exports.verifyReferral = async (req, res) => {
         });
 
     } catch (error) {
-
         console.log(error);
-
         res.status(500).json({
             success: false,
             message: 'Server Error'
         });
-
     }
-
 };
-
 
 // =====================================
 // VERIFY OTP
 // =====================================
 
 exports.verifyOtp = async (req, res) => {
-
     try {
-
         const { email, otp } = req.body;
 
         if (!email || !otp) {
-
             return res.status(400).json({
                 success: false,
                 message: 'Email and OTP are required.'
             });
-
         }
 
         const user = await User.findOne({ email });
 
         if (!user) {
-
             return res.status(404).json({
                 success: false,
                 message: 'User not found.'
             });
-
         }
 
         if (user.is_verified) {
-
             return res.status(400).json({
                 success: false,
                 message: 'Account already verified.'
             });
-
         }
 
         if (user.otp !== otp) {
-
             return res.status(400).json({
                 success: false,
                 message: 'Invalid OTP.'
             });
-
         }
 
         if (user.otp_expiry < new Date()) {
-
             return res.status(400).json({
                 success: false,
                 message: 'OTP expired.'
             });
-
         }
 
         user.is_verified = true;
@@ -274,56 +229,43 @@ exports.verifyOtp = async (req, res) => {
         });
 
     } catch (error) {
-
         console.log(error);
-
         res.status(500).json({
             success: false,
             message: 'Server Error'
         });
-
     }
-
 };
-
 
 // =====================================
 // RESEND OTP
 // =====================================
 
 exports.resendOtp = async (req, res) => {
-
     try {
-
         const { email } = req.body;
 
         if (!email) {
-
             return res.status(400).json({
                 success: false,
                 message: 'Email is required'
             });
-
         }
 
         const user = await User.findOne({ email });
 
         if (!user) {
-
             return res.status(404).json({
                 success: false,
                 message: 'User not found'
             });
-
         }
 
         if (user.is_verified) {
-
             return res.status(400).json({
                 success: false,
                 message: 'Account already verified'
             });
-
         }
 
         const otp = '123456';
@@ -344,56 +286,43 @@ exports.resendOtp = async (req, res) => {
         });
 
     } catch (error) {
-
         console.log(error);
-
         res.status(500).json({
             success: false,
             message: 'Server Error'
         });
-
     }
-
 };
-
 
 // =====================================
 // LOGIN
 // =====================================
 
 exports.login = async (req, res) => {
-
     try {
-
         const { email, password } = req.body;
 
         if (!email || !password) {
-
             return res.status(400).json({
                 success: false,
                 message: 'Email and password are required'
             });
-
         }
 
         const user = await User.findOne({ email });
 
         if (!user) {
-
             return res.status(404).json({
                 success: false,
                 message: 'User not found'
             });
-
         }
 
         if (!user.is_verified) {
-
             return res.status(400).json({
                 success: false,
                 message: 'Please verify your account first'
             });
-
         }
 
         const isMatch = await bcrypt.compare(
@@ -402,12 +331,10 @@ exports.login = async (req, res) => {
         );
 
         if (!isMatch) {
-
             return res.status(400).json({
                 success: false,
                 message: 'Invalid password'
             });
-
         }
 
         user.last_login = new Date();
@@ -438,47 +365,36 @@ exports.login = async (req, res) => {
         });
 
     } catch (error) {
-
         console.log(error);
-
         res.status(500).json({
             success: false,
             message: 'Server Error'
         });
-
     }
-
 };
-
 
 // =====================================
 // FORGOT PASSWORD
 // =====================================
 
 exports.forgotPassword = async (req, res) => {
-
     try {
-
         const { email } = req.body;
 
         if (!email) {
-
             return res.status(400).json({
                 success: false,
                 message: 'Email is required'
             });
-
         }
 
         const user = await User.findOne({ email });
 
         if (!user) {
-
             return res.status(404).json({
                 success: false,
                 message: 'User not found'
             });
-
         }
 
         const otp = '123456';
@@ -499,27 +415,20 @@ exports.forgotPassword = async (req, res) => {
         });
 
     } catch (error) {
-
         console.log(error);
-
         res.status(500).json({
             success: false,
             message: 'Server Error'
         });
-
     }
-
 };
-
 
 // =====================================
 // RESET PASSWORD
 // =====================================
 
 exports.resetPassword = async (req, res) => {
-
     try {
-
         const {
             email,
             otp,
@@ -531,41 +440,33 @@ exports.resetPassword = async (req, res) => {
             !otp ||
             !newPassword
         ) {
-
             return res.status(400).json({
                 success: false,
                 message: 'All fields are required'
             });
-
         }
 
         const user = await User.findOne({ email });
 
         if (!user) {
-
             return res.status(404).json({
                 success: false,
                 message: 'User not found'
             });
-
         }
 
         if (user.otp !== otp) {
-
             return res.status(400).json({
                 success: false,
                 message: 'Invalid OTP'
             });
-
         }
 
         if (user.otp_expiry < new Date()) {
-
             return res.status(400).json({
                 success: false,
                 message: 'OTP expired'
             });
-
         }
 
         const salt = await bcrypt.genSalt(10);
@@ -588,39 +489,30 @@ exports.resetPassword = async (req, res) => {
         });
 
     } catch (error) {
-
         console.log(error);
-
         res.status(500).json({
             success: false,
             message: 'Server Error'
         });
-
     }
-
 };
-
 
 // =====================================
 // DASHBOARD API
 // =====================================
 
 exports.dashboard = async (req, res) => {
-
     try {
-
         const userId = req.user.userId;
 
         const user = await User.findById(userId)
         .select('-password -otp -otp_expiry');
 
         if (!user) {
-
             return res.status(404).json({
                 success: false,
                 message: 'User not found'
             });
-
         }
 
         const directTeamUsers = await User.find({
@@ -633,30 +525,23 @@ exports.dashboard = async (req, res) => {
         let uplineDetails = null;
 
         if (user.referred_by) {
-
             const upline = await User.findById(
                 user.referred_by
             )
             .select('username email referral_code');
 
             if (upline) {
-
                 uplineDetails = {
                     username: upline.username,
                     email: upline.email,
                     referral_code: upline.referral_code
                 };
-
             }
-
         }
 
         res.status(200).json({
-
             success: true,
-
             dashboard: {
-
                 profile: {
                     username: user.username,
                     email: user.email,
@@ -669,7 +554,6 @@ exports.dashboard = async (req, res) => {
                     last_login: user.last_login,
                     kyc_status: user.kyc_status
                 },
-
                 wallet: {
                     wallet_balance: user.wallet_balance,
                     total_income: user.total_income,
@@ -680,107 +564,72 @@ exports.dashboard = async (req, res) => {
                     reward_income: user.reward_income,
                     offer_income: user.offer_income
                 },
-
                 team: {
                     direct_team_count: directTeamCount,
                     direct_team_users: directTeamUsers
                 },
-
                 upline: uplineDetails
-
             }
-
         });
 
     } catch (error) {
-
         console.log(error);
-
         res.status(500).json({
             success: false,
             message: 'Server Error'
         });
-
     }
-
 };
-
 
 // =====================================
 // WALLET API
 // =====================================
 
 exports.wallet = async (req, res) => {
-
     try {
-
         const userId = req.user.userId;
 
         const user = await User.findById(userId);
 
         if (!user) {
-
             return res.status(404).json({
                 success: false,
                 message: 'User not found'
             });
-
         }
 
         res.status(200).json({
-
             success: true,
-
             wallet: {
-
                 wallet_balance: user.wallet_balance,
-
                 income: {
-
                     today_income: user.today_income,
-
                     monthly_income: user.monthly_income,
-
                     total_income: user.total_income,
-
                     direct_income: user.direct_income,
-
                     level_income: user.level_income,
-
                     reward_income: user.reward_income,
-
                     offer_income: user.offer_income
-
                 },
-
                 last_updated: user.updated_at
-
             }
-
         });
 
     } catch (error) {
-
         console.log(error);
-
         res.status(500).json({
             success: false,
             message: 'Server Error'
         });
-
     }
-
 };
-
 
 // =====================================
 // ADVANCED KYC UPDATE
 // =====================================
 
 exports.updateKyc = async (req, res) => {
-
     try {
-
         const userId = req.user.userId;
 
         const {
@@ -795,12 +644,10 @@ exports.updateKyc = async (req, res) => {
         const user = await User.findById(userId);
 
         if (!user) {
-
             return res.status(404).json({
                 success: false,
                 message: 'User not found'
             });
-
         }
 
         user.full_name = full_name;
@@ -810,46 +657,34 @@ exports.updateKyc = async (req, res) => {
         user.account_number = account_number;
         user.ifsc_code = ifsc_code;
 
-        if (req.files['aadhaar_front_image']) {
-
+        if (req.files && req.files['aadhaar_front_image']) {
             user.aadhaar_front_image =
                 req.files['aadhaar_front_image'][0].path;
-
         }
 
-        if (req.files['aadhaar_back_image']) {
-
+        if (req.files && req.files['aadhaar_back_image']) {
             user.aadhaar_back_image =
                 req.files['aadhaar_back_image'][0].path;
-
         }
 
-        if (req.files['pan_card_image']) {
-
+        if (req.files && req.files['pan_card_image']) {
             user.pan_card_image =
                 req.files['pan_card_image'][0].path;
-
         }
 
-        if (req.files['selfie_image']) {
-
+        if (req.files && req.files['selfie_image']) {
             user.selfie_image =
                 req.files['selfie_image'][0].path;
-
         }
 
-        if (req.files['self_auth_image']) {
-
+        if (req.files && req.files['self_auth_image']) {
             user.self_auth_image =
                 req.files['self_auth_image'][0].path;
-
         }
 
-        if (req.files['signature_image']) {
-
+        if (req.files && req.files['signature_image']) {
             user.signature_image =
                 req.files['signature_image'][0].path;
-
         }
 
         user.kyc_status = 'Pending';
@@ -857,57 +692,40 @@ exports.updateKyc = async (req, res) => {
         await user.save();
 
         res.status(200).json({
-
             success: true,
             message: 'Advanced KYC submitted successfully',
             kyc_status: user.kyc_status,
-
             documents: {
-
                 aadhaar_front_image:
                     user.aadhaar_front_image,
-
                 aadhaar_back_image:
                     user.aadhaar_back_image,
-
                 pan_card_image:
                     user.pan_card_image,
-
                 selfie_image:
                     user.selfie_image,
-
                 self_auth_image:
                     user.self_auth_image,
-
                 signature_image:
                     user.signature_image
-
             }
-
         });
 
     } catch (error) {
-
         console.log(error);
-
         res.status(500).json({
             success: false,
             message: 'Server Error'
         });
-
     }
-
 };
-
 
 // =====================================
 // GET KYC DETAILS
 // =====================================
 
 exports.getKyc = async (req, res) => {
-
     try {
-
         const userId = req.user.userId;
 
         const user = await User.findById(userId)
@@ -928,12 +746,10 @@ exports.getKyc = async (req, res) => {
         `);
 
         if (!user) {
-
             return res.status(404).json({
                 success: false,
                 message: 'User not found'
             });
-
         }
 
         res.status(200).json({
@@ -942,39 +758,30 @@ exports.getKyc = async (req, res) => {
         });
 
     } catch (error) {
-
         console.log(error);
-
         res.status(500).json({
             success: false,
             message: 'Server Error'
         });
-
     }
-
 };
-
 
 // =====================================
 // GET PROFILE
 // =====================================
 
 exports.getProfile = async (req, res) => {
-
     try {
-
         const userId = req.user.userId;
 
         const user = await User.findById(userId)
         .select('-password -otp -otp_expiry');
 
         if (!user) {
-
             return res.status(404).json({
                 success: false,
                 message: 'User not found'
             });
-
         }
 
         res.status(200).json({
@@ -983,27 +790,20 @@ exports.getProfile = async (req, res) => {
         });
 
     } catch (error) {
-
         console.log(error);
-
         res.status(500).json({
             success: false,
             message: 'Server Error'
         });
-
     }
-
 };
-
 
 // =====================================
 // CHANGE PASSWORD
 // =====================================
 
 exports.changePassword = async (req, res) => {
-
     try {
-
         const userId = req.user.userId;
 
         const {
@@ -1012,23 +812,19 @@ exports.changePassword = async (req, res) => {
         } = req.body;
 
         if (!oldPassword || !newPassword) {
-
             return res.status(400).json({
                 success: false,
                 message: 'Old password and new password are required'
             });
-
         }
 
         const user = await User.findById(userId);
 
         if (!user) {
-
             return res.status(404).json({
                 success: false,
                 message: 'User not found'
             });
-
         }
 
         const isMatch = await bcrypt.compare(
@@ -1037,12 +833,10 @@ exports.changePassword = async (req, res) => {
         );
 
         if (!isMatch) {
-
             return res.status(400).json({
                 success: false,
                 message: 'Old password is incorrect'
             });
-
         }
 
         const salt = await bcrypt.genSalt(10);
@@ -1062,52 +856,39 @@ exports.changePassword = async (req, res) => {
         });
 
     } catch (error) {
-
         console.log(error);
-
         res.status(500).json({
             success: false,
             message: 'Server Error'
         });
-
     }
-
 };
-
 
 // =====================================
 // LOGOUT
 // =====================================
 
 exports.logout = async (req, res) => {
-
     try {
-
         res.status(200).json({
             success: true,
             message: 'Logout successful'
         });
-
     } catch (error) {
-
         console.log(error);
-
         res.status(500).json({
             success: false,
             message: 'Server Error'
         });
-
     }
-
 };
+
 // =====================================
 // TRANSACTION HISTORY
 // =====================================
 
 exports.getTransactionHistory = async (req, res) => {
-
     try {
-
         const userId = req.user.userId;
 
         const transactions = await Transaction.find({
@@ -1115,36 +896,26 @@ exports.getTransactionHistory = async (req, res) => {
         }).sort({ createdAt: -1 });
 
         res.status(200).json({
-
             success: true,
-
             count: transactions.length,
-
             transactions
-
         });
-            } catch (error) {
 
+    } catch (error) {
         console.log(error);
-
         res.status(500).json({
             success: false,
             message: 'Transaction history fetch failed'
         });
-
     }
-
 };
-        
 
 // =====================================
 // ADD INCOME + TRANSACTION
 // =====================================
 
 exports.addIncome = async (req, res) => {
-
     try {
-
         const userId = req.user.userId;
 
         const {
@@ -1154,112 +925,59 @@ exports.addIncome = async (req, res) => {
         } = req.body;
 
         if (!amount || !type) {
-
             return res.status(400).json({
                 success: false,
                 message: 'Amount and type are required'
             });
-
         }
 
         const user = await User.findById(userId);
 
         if (!user) {
-
             return res.status(404).json({
                 success: false,
                 message: 'User not found'
             });
-
         }
 
         // UPDATE WALLET
-
         user.wallet_balance += Number(amount);
-
         user.total_income += Number(amount);
 
         // INCOME TYPE UPDATE
-
         if (type === 'direct_income') {
-
             user.direct_income += Number(amount);
-
-        }
-
-        else if (type === 'level_income') {
-
+        } else if (type === 'level_income') {
             user.level_income += Number(amount);
-
-        }
-
-        else if (type === 'reward_income') {
-
+        } else if (type === 'reward_income') {
             user.reward_income += Number(amount);
-
-        }
-
-        else if (type === 'offer_income') {
-
+        } else if (type === 'offer_income') {
             user.offer_income += Number(amount);
-
         }
 
         await user.save();
 
         // CREATE TRANSACTION
-
         const transaction = await Transaction.create({
-
             user: user._id,
-
             type,
-
             amount,
-
-            description:
-                description || 'Income added',
-
+            description: description || 'Income added',
             status: 'success'
-
         });
 
         res.status(200).json({
-
             success: true,
-
             message: 'Income added successfully',
-
             wallet_balance: user.wallet_balance,
-
             transaction
-
         });
 
     } catch (error) {
-
         console.log(error);
-
         res.status(500).json({
-
             success: false,
             message: 'Income add failed'
-
         });
-
     }
-
-};
-
-    } catch (error) {
-
-        console.log(error);
-
-        res.status(500).json({
-            success: false,
-            message: 'Transaction history fetch failed'
-        });
-
-    }
-
 };

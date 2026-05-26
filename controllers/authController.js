@@ -1123,6 +1123,18 @@ exports.getTransactionHistory = async (req, res) => {
             transactions
 
         });
+            } catch (error) {
+
+        console.log(error);
+
+        res.status(500).json({
+            success: false,
+            message: 'Transaction history fetch failed'
+        });
+
+    }
+
+};
         
 
 // =====================================

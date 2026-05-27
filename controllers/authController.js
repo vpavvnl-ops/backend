@@ -1032,7 +1032,7 @@ exports.withdrawRequest = async (req, res) => {
         const withdrawal = await Withdrawal.create({
             user: user._id,
             amount: withdrawAmount,
-            status: 'pending'
+            status: 'Pending'
         });
 
         // CREATE TRANSACTION HISTORY ENTRY
@@ -1041,7 +1041,7 @@ exports.withdrawRequest = async (req, res) => {
             type: 'withdrawal',
             amount: withdrawAmount,
             description: 'Withdrawal request submitted',
-            status: 'pending'
+            status: 'Pending'
         });
 
         res.status(200).json({

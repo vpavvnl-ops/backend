@@ -1053,7 +1053,7 @@ exports.withdrawRequest = async (req, res) => {
         });
 
     } catch (error) {
-        console.log(error);
+        console.log("WITHDRAW ERROR =>", error);
         res.status(500).json({
             success: false,
             message: 'Withdrawal request failed'

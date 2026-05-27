@@ -1041,7 +1041,7 @@ exports.withdrawRequest = async (req, res) => {
             type: 'withdrawal',
             amount: withdrawAmount,
             description: 'Withdrawal request submitted',
-            status: 'Pending'
+            status: 'pending'
         });
 
         res.status(200).json({

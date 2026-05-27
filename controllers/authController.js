@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const Transaction = require('../models/Transaction');
+const Withdrawal = require('../models/Withdrawal');
 
 // =====================================
 // REGISTER
@@ -978,6 +979,84 @@ exports.addIncome = async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Income add failed'
+        });
+    }
+};
+
+// =====================================
+// WITHDRAW REQUEST
+// =====================================
+
+exports.withdrawRequest = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const { amount } = req.body;
+
+        if (!amount) {
+            return res.status(400).json({
+                success: false,
+                message: 'Withdrawal amount is required'
+            });
+        }
+
+        const withdrawAmount = Number(amount);
+
+        if (withdrawAmount <= 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid withdrawal amount'
+            });
+        }
+
+        const user = await User.findById(userId);
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        if (user.wallet_balance < withdrawAmount) {
+            return res.status(400).json({
+                success: false,
+                message: 'Insufficient wallet balance'
+            });
+        }
+
+        // DEDUCT WALLET BALANCE
+        user.wallet_balance -= withdrawAmount;
+        await user.save();
+
+        // CREATE WITHDRAWAL REQUEST
+        const withdrawal = await Withdrawal.create({
+            user: user._id,
+            amount: withdrawAmount,
+            status: 'pending'
+        });
+
+        // CREATE TRANSACTION HISTORY ENTRY
+        const transaction = await Transaction.create({
+            user: user._id,
+            type: 'withdrawal',
+            amount: withdrawAmount,
+            description: 'Withdrawal request submitted',
+            status: 'pending'
+        });
+
+        res.status(200).json({
+            success: true,
+            message: 'Withdrawal request submitted successfully',
+            wallet_balance: user.wallet_balance,
+            withdrawal,
+            transaction
+        });
+
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({
+            success: false,
+            message: 'Withdrawal request failed'
         });
     }
 };

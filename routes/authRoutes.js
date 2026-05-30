@@ -109,6 +109,17 @@ router.post(
 
 
 // =====================================
+// WITHDRAW HISTORY (PROTECTED)
+// =====================================
+
+router.get(
+    '/withdraw-history',
+    verifyToken,
+    authController.getWithdrawHistory
+);
+
+
+// =====================================
 // ADVANCED KYC (PROTECTED)
 // =====================================
 

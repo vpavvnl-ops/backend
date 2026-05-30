@@ -1060,3 +1060,32 @@ exports.withdrawRequest = async (req, res) => {
         });
     }
 };
+
+// =====================================
+// WITHDRAW HISTORY
+// =====================================
+
+exports.getWithdrawHistory = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+
+        const withdrawals = await Withdrawal.find({
+            user: userId
+        }).sort({
+            createdAt: -1
+        });
+
+        res.status(200).json({
+            success: true,
+            count: withdrawals.length,
+            withdrawals
+        });
+
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({
+            success: false,
+            message: 'Withdraw history fetch failed'
+        });
+    }
+};

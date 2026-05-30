@@ -1160,3 +1160,42 @@ exports.getTeamSummary = async (req, res) => {
         });
     }
 };
+
+// =====================================
+// REFERRAL DETAILS
+// =====================================
+
+exports.getReferralDetails = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+
+        const user = await User.findById(userId).populate('referred_by', 'username');
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        const upline_name = user.referred_by ? user.referred_by.username : 'Admin';
+        const referral_link = `https://sajpe.com/register?ref=${user.referral_code}`;
+
+        res.status(200).json({
+            success: true,
+            referral: {
+                username: user.username,
+                referral_code: user.referral_code,
+                referral_link,
+                upline_name
+            }
+        });
+
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch referral details'
+        });
+    }
+};

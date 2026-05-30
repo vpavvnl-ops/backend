@@ -1184,7 +1184,7 @@ exports.getReferralDetails = async (req, res) => {
             });
         }
 
-        const referral_link = const referral_link = `https://d-task.in/register?ref=${user.referral_code}`;
+        const referral_link = `https://d-task.in/register?ref=${user.referral_code}`;
 
         return res.status(200).json({
             success: true,

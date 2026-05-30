@@ -4,6 +4,7 @@ const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const Transaction = require('../models/Transaction');
 const Withdrawal = require('../models/Withdrawal');
+const Transaction = require('../models/Transaction');
 
 // =====================================
 // REGISTER
@@ -1206,5 +1207,83 @@ exports.getReferralDetails = async (req, res) => {
             error: error.message
         });
 
+    }
+} // Add this line at the top of your authController.js ONLY if it is not already there
+// const Transaction = require('../models/Transaction');
+
+// =====================================
+// INCOME SUMMARY
+// =====================================
+
+exports.getIncomeSummary = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+
+        // Fetch user to get wallet balance
+        const user = await User.findById(userId);
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        // Fetch all transactions for this user
+        const transactions = await Transaction.find({ user: userId });
+
+        // Initialize calculation variables
+        let total_income = 0;
+        let direct_income = 0;
+        let level_income = 0;
+        let total_withdrawal = 0;
+        let pending_withdrawal = 0;
+
+        // Calculate based on transaction type and status
+        transactions.forEach((tx) => {
+            const amount = Number(tx.amount) || 0;
+
+            // Total income (everything except withdrawals)
+            if (tx.type !== 'withdrawal') {
+                total_income += amount;
+            }
+
+            // Specific income types
+            if (tx.type === 'direct_income') {
+                direct_income += amount;
+            } else if (tx.type === 'level_income') {
+                level_income += amount;
+            }
+
+            // Withdrawal logic
+            if (tx.type === 'withdrawal') {
+                total_withdrawal += amount;
+                
+                // Check for pending withdrawal (case-insensitive)
+                if (tx.status && tx.status.toLowerCase() === 'pending') {
+                    pending_withdrawal += amount;
+                }
+            }
+        });
+
+        // Send Response
+        res.status(200).json({
+            success: true,
+            income_summary: {
+                total_income: total_income,
+                direct_income: direct_income,
+                level_income: level_income,
+                wallet_balance: user.wallet_balance || 0,
+                total_withdrawal: total_withdrawal,
+                pending_withdrawal: pending_withdrawal
+            }
+        });
+
+    } catch (error) {
+        console.log("INCOME SUMMARY ERROR =>", error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch income summary'
+        });
     }
 };

@@ -223,5 +223,10 @@ router.get(
     verifyToken,
     authController.getReferralDetails
 );
+router.get(
+    '/income-summary',
+    verifyToken,
+    authController.getIncomeSummary
+);
 console.log("REFERRAL ROUTE LOADED");
 module.exports = router;

@@ -1169,7 +1169,7 @@ exports.getReferralDetails = async (req, res) => {
     try {
         const userId = req.user.userId;
 
-        const user = await User.findById(userId).populate('referred_by', 'username');
+        const user = await User.findById(userId);
 
         if (!user) {
             return res.status(404).json({
@@ -1178,7 +1178,6 @@ exports.getReferralDetails = async (req, res) => {
             });
         }
 
-        const upline_name = user.referred_by ? user.referred_by.username : 'Admin';
         const referral_link = `https://sajpe.com/register?ref=${user.referral_code}`;
 
         res.status(200).json({
@@ -1187,7 +1186,7 @@ exports.getReferralDetails = async (req, res) => {
                 username: user.username,
                 referral_code: user.referral_code,
                 referral_link,
-                upline_name
+                referred_by: user.referred_by || 'Admin'
             }
         });
 

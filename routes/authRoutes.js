@@ -205,6 +205,11 @@ router.post(
     verifyToken,
     authController.logout
 );
-
+// DIRECT TEAM
+router.get(
+    '/direct-team',
+    verifyToken,
+    authController.getDirectTeam
+);
 
 module.exports = router;

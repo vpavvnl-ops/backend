@@ -1089,3 +1089,32 @@ exports.getWithdrawHistory = async (req, res) => {
         });
     }
 };
+
+// =====================================
+// DIRECT TEAM
+// =====================================
+
+exports.getDirectTeam = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+
+        const directTeam = await User.find({
+            referred_by: userId
+        })
+        .select('username email referral_code rank status kyc_status createdAt')
+        .sort({ createdAt: -1 });
+
+        res.status(200).json({
+            success: true,
+            count: directTeam.length,
+            direct_team: directTeam
+        });
+
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch direct team'
+        });
+    }
+};

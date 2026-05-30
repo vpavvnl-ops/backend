@@ -1162,39 +1162,49 @@ exports.getTeamSummary = async (req, res) => {
 };
 
 // =====================================
+// =====================================
 // REFERRAL DETAILS
 // =====================================
 
 exports.getReferralDetails = async (req, res) => {
     try {
+
         const userId = req.user.userId;
 
+        console.log("USER ID:", userId);
+
         const user = await User.findById(userId);
+
+        console.log("USER DATA:", user);
 
         if (!user) {
             return res.status(404).json({
                 success: false,
-                message: 'User not found'
+                message: "User not found"
             });
         }
 
         const referral_link = `https://sajpe.com/register?ref=${user.referral_code}`;
 
-        res.status(200).json({
+        return res.status(200).json({
             success: true,
             referral: {
                 username: user.username,
                 referral_code: user.referral_code,
                 referral_link,
-                referred_by: user.referred_by || 'Admin'
+                referred_by: user.referred_by || "Admin"
             }
         });
 
     } catch (error) {
-        console.log(error);
-        res.status(500).json({
+
+        console.log("REFERRAL ERROR =>", error);
+
+        return res.status(500).json({
             success: false,
-            message: 'Failed to fetch referral details'
+            message: "Internal Server Error",
+            error: error.message
         });
+
     }
 };

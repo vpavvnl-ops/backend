@@ -211,5 +211,10 @@ router.get(
     verifyToken,
     authController.getDirectTeam
 );
-
+// TEAM SUMMARY
+router.get(
+    '/team-summary',
+    verifyToken,
+    authController.getTeamSummary
+);
 module.exports = router;

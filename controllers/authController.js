@@ -1118,3 +1118,45 @@ exports.getDirectTeam = async (req, res) => {
         });
     }
 };
+
+// =====================================
+// TEAM SUMMARY
+// =====================================
+
+exports.getTeamSummary = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+
+        const user = await User.findById(userId);
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        const directTeamCount = await User.countDocuments({
+            referred_by: userId
+        });
+
+        res.status(200).json({
+            success: true,
+            team_summary: {
+                referral_code: user.referral_code,
+                direct_team_count: directTeamCount,
+                total_team_count: user.total_team_count || 0,
+                rank: user.rank,
+                status: user.status,
+                kyc_status: user.kyc_status
+            }
+        });
+
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch team summary'
+        });
+    }
+};

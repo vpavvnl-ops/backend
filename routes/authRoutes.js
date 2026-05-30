@@ -255,5 +255,11 @@ router.get(
     verifyToken,
     authController.getNotifications
 );
+// DASHBOARD SUMMARY
+router.get(
+    '/dashboard-summary',
+    verifyToken,
+    authController.getDashboardSummary
+);
 console.log("REFERRAL ROUTE LOADED");
 module.exports = router;

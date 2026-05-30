@@ -217,4 +217,11 @@ router.get(
     verifyToken,
     authController.getTeamSummary
 );
+// REFERRAL DETAILS
+router.get(
+    '/referral-details',
+    verifyToken,
+    authController.getReferralDetails
+);
+console.log("REFERRAL ROUTE LOADED");
 module.exports = router;

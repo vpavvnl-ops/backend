@@ -237,5 +237,14 @@ router.get(
     verifyToken,
     authController.getDownlineIncome
 );
+// =====================================
+// LEVEL INCOME HISTORY (PROTECTED)
+// =====================================
+
+router.get(
+    '/level-income-history',
+    verifyToken,
+    authController.getLevelIncomeHistory
+);
 console.log("REFERRAL ROUTE LOADED");
 module.exports = router;

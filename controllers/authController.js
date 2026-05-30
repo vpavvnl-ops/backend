@@ -1340,4 +1340,44 @@ exports.getDownlineIncome = async (req, res) => {
             message: 'Failed to fetch downline income'
         });
     }
+}
+// =====================================
+// LEVEL INCOME HISTORY
+// =====================================
+
+exports.getLevelIncomeHistory = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+
+        const transactions = await Transaction.find({
+            user: userId,
+            type: 'level_income'
+        }).sort({ createdAt: -1 });
+
+        let total_level_income = 0;
+        
+        const level_income_history = transactions.map((tx) => {
+            total_level_income += Number(tx.amount) || 0;
+            return {
+                amount: tx.amount,
+                description: tx.description,
+                status: tx.status,
+                createdAt: tx.createdAt
+            };
+        });
+
+        res.status(200).json({
+            success: true,
+            count: level_income_history.length,
+            total_level_income: total_level_income,
+            level_income_history: level_income_history
+        });
+
+    } catch (error) {
+        console.log("LEVEL INCOME HISTORY ERROR =>", error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch level income history'
+        });
+    }
 };

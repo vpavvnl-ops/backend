@@ -1285,4 +1285,59 @@ exports.getIncomeSummary = async (req, res) => {
             message: 'Failed to fetch income summary'
         });
     }
+}
+// =====================================
+// DOWNLINE INCOME
+// =====================================
+
+exports.getDownlineIncome = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+
+        // 1. Find all direct downline members
+        const directTeam = await User.find({ referred_by: userId })
+            .select('username email referral_code rank status');
+
+        // 2. Fetch and calculate total income for each member concurrently
+        const downline_income = await Promise.all(
+            directTeam.map(async (member) => {
+                
+                // Fetch only non-withdrawal transactions for this specific member
+                const transactions = await Transaction.find({
+                    user: member._id,
+                    type: { $ne: 'withdrawal' }
+                });
+
+                // Calculate total income safely
+                let total_income = 0;
+                transactions.forEach((tx) => {
+                    total_income += Number(tx.amount) || 0;
+                });
+
+                // Return formatted member object
+                return {
+                    username: member.username,
+                    email: member.email,
+                    referral_code: member.referral_code,
+                    rank: member.rank,
+                    status: member.status,
+                    total_income: total_income
+                };
+            })
+        );
+
+        // 3. Send successful response
+        res.status(200).json({
+            success: true,
+            count: downline_income.length,
+            downline_income: downline_income
+        });
+
+    } catch (error) {
+        console.log("DOWNLINE INCOME ERROR =>", error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch downline income'
+        });
+    }
 };

@@ -228,5 +228,14 @@ router.get(
     verifyToken,
     authController.getIncomeSummary
 );
+// =====================================
+// DOWNLINE INCOME (PROTECTED)
+// =====================================
+
+router.get(
+    '/downline-income',
+    verifyToken,
+    authController.getDownlineIncome
+);
 console.log("REFERRAL ROUTE LOADED");
 module.exports = router;

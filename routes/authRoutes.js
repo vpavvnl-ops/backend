@@ -261,5 +261,11 @@ router.get(
     verifyToken,
     authController.getDashboardSummary
 );
+// RANK PROGRESS (PROTECTED)
+router.get(
+    '/rank-progress',
+    verifyToken,
+    authController.getRankProgress
+);
 console.log("REFERRAL ROUTE LOADED");
 module.exports = router;

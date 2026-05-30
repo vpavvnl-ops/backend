@@ -1504,4 +1504,93 @@ exports.getDashboardSummary = async (req, res) => {
             message: 'Failed to fetch dashboard summary'
         });
     }
+}
+// =====================================
+// RANK PROGRESS
+// =====================================
+
+exports.getRankProgress = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+
+        const user = await User.findById(userId);
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        const directTeamCount = await User.countDocuments({
+            referred_by: userId
+        });
+
+        // Define Rank Plan
+        const rankPlan = [
+            { name: 'Starter', required: 0 },
+            { name: 'Silver', required: 5 },
+            { name: 'Gold', required: 10 },
+            { name: 'Platinum', required: 25 },
+            { name: 'Diamond', required: 50 },
+            { name: 'Crown Diamond', required: 100 }
+        ];
+
+        let currentRank = 'Starter';
+        let nextRankObj = null;
+
+        // Determine Current and Next Rank
+        for (let i = 0; i < rankPlan.length; i++) {
+            if (directTeamCount >= rankPlan[i].required) {
+                currentRank = rankPlan[i].name;
+                nextRankObj = rankPlan[i + 1] || null; // Will be null if highest rank is reached
+            } else {
+                break; // Stop loop once required target exceeds directTeamCount
+            }
+        }
+
+        let nextRank = 'Achieved';
+        let requiredDirectTeam = rankPlan[rankPlan.length - 1].required; // Default to highest requirement
+        let remainingDirectTeam = 0;
+        let progressPercentage = 100;
+
+        // Calculate progress if not at highest rank
+        if (nextRankObj) {
+            nextRank = nextRankObj.name;
+            requiredDirectTeam = nextRankObj.required;
+            remainingDirectTeam = nextRankObj.required - directTeamCount;
+            
+            // Calculate progress percentage relative to the *current rank* goal
+            // Example: Starter(0) -> Silver(5). Current direct = 3. Progress = 3/5 = 60%
+            // Example: Silver(5) -> Gold(10). Current direct = 8.
+            // Progress = (8 - 5) / (10 - 5) = 3 / 5 = 60%
+            
+            // Find current rank requirement for proper percentage calculation
+            const currentRankReq = rankPlan.find(r => r.name === currentRank).required;
+            
+            const earnedInCurrentLevel = directTeamCount - currentRankReq;
+            const requiredForNextLevel = nextRankObj.required - currentRankReq;
+            
+            progressPercentage = Math.round((earnedInCurrentLevel / requiredForNextLevel) * 100);
+        }
+
+        res.status(200).json({
+            success: true,
+            rank_progress: {
+                current_rank: currentRank,
+                current_direct_team: directTeamCount,
+                next_rank: nextRank,
+                required_direct_team: requiredDirectTeam,
+                remaining_direct_team: remainingDirectTeam,
+                progress_percentage: progressPercentage
+            }
+        });
+
+    } catch (error) {
+        console.log("RANK PROGRESS ERROR =>", error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch rank progress'
+        });
+    }
 };

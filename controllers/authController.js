@@ -14,6 +14,7 @@ exports.register = async (req, res) => {
         const {
             username,
             email,
+            mobile,
             password,
             confirm_password,
             referral_id
@@ -22,6 +23,7 @@ exports.register = async (req, res) => {
         if (
             !username ||
             !email ||
+            !mobile ||
             !password ||
             !confirm_password ||
             !referral_id
@@ -29,6 +31,14 @@ exports.register = async (req, res) => {
             return res.status(400).json({
                 success: false,
                 message: 'All fields including Referral ID are required.'
+            });
+        }
+
+        const mobileRegex = /^\d{10}$/;
+        if (!mobileRegex.test(mobile)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Please enter a valid 10 digit mobile number'
             });
         }
 
@@ -45,6 +55,15 @@ exports.register = async (req, res) => {
             return res.status(409).json({
                 success: false,
                 message: 'Email already registered.'
+            });
+        }
+
+        const existingMobile = await User.findOne({ mobile });
+
+        if (existingMobile) {
+            return res.status(409).json({
+                success: false,
+                message: 'Mobile number already registered'
             });
         }
 
@@ -94,6 +113,7 @@ exports.register = async (req, res) => {
         const newUser = new User({
             username,
             email,
+            mobile,
             password: hashedPassword,
             referral_code: newReferralCode,
             referred_by: referringUser

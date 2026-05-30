@@ -1380,4 +1380,41 @@ exports.getLevelIncomeHistory = async (req, res) => {
             message: 'Failed to fetch level income history'
         });
     }
+}
+// =====================================
+// NOTIFICATIONS
+// =====================================
+
+exports.getNotifications = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+
+        const transactions = await Transaction.find({ user: userId })
+            .select('type amount description status createdAt')
+            .sort({ createdAt: -1 })
+            .limit(20);
+
+        const notifications = transactions.map((tx) => {
+            return {
+                type: tx.type,
+                amount: tx.amount,
+                description: tx.description,
+                status: tx.status,
+                createdAt: tx.createdAt
+            };
+        });
+
+        res.status(200).json({
+            success: true,
+            count: notifications.length,
+            notifications: notifications
+        });
+
+    } catch (error) {
+        console.log("NOTIFICATIONS ERROR =>", error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch notifications'
+        });
+    }
 };

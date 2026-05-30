@@ -246,5 +246,14 @@ router.get(
     verifyToken,
     authController.getLevelIncomeHistory
 );
+// =====================================
+// NOTIFICATIONS (PROTECTED)
+// =====================================
+
+router.get(
+    '/notifications',
+    verifyToken,
+    authController.getNotifications
+);
 console.log("REFERRAL ROUTE LOADED");
 module.exports = router;

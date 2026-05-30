@@ -4,7 +4,6 @@ const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const Transaction = require('../models/Transaction');
 const Withdrawal = require('../models/Withdrawal');
-const Transaction = require('../models/Transaction');
 
 // =====================================
 // REGISTER

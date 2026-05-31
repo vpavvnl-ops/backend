@@ -1548,7 +1548,7 @@ exports.getRankProgress = async (req, res) => {
 
         // Define Rank Plan
         const rankPlan = [
-            { name: 'Starter', required: 0 },
+            { name: 'Basic', required: 0 },
             { name: 'Silver', required: 5 },
             { name: 'Gold', required: 10 },
             { name: 'Platinum', required: 25 },
@@ -1556,7 +1556,7 @@ exports.getRankProgress = async (req, res) => {
             { name: 'Crown Diamond', required: 100 }
         ];
 
-        let currentRank = 'Starter';
+        let currentRank = 'Basic';
         let nextRankObj = null;
 
         // Determine Current and Next Rank
@@ -1581,7 +1581,7 @@ exports.getRankProgress = async (req, res) => {
             remainingDirectTeam = nextRankObj.required - directTeamCount;
             
             // Calculate progress percentage relative to the *current rank* goal
-            // Example: Starter(0) -> Silver(5). Current direct = 3. Progress = 3/5 = 60%
+            // Example: Basic(0) -> Silver(5). Current direct = 3. Progress = 3/5 = 60%
             // Example: Silver(5) -> Gold(10). Current direct = 8.
             // Progress = (8 - 5) / (10 - 5) = 3 / 5 = 60%
             

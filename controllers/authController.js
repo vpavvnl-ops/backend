@@ -51,96 +51,31 @@ exports.register = async (req, res) => {
 
         const existingUser = await User.findOne({ email });
 
-        if (existingUser) {
-            return res.status(409).json({
-                success: false,
-                message: 'Email already registered.'
-            });
-        }
+if (existingUser) {
 
-        const existingMobile = await User.findOne({ mobile });
-
-        if (existingMobile) {
-            return res.status(409).json({
-                success: false,
-                message: 'Mobile number already registered'
-            });
-        }
-
-        let referringUser = null;
-
-        if (referral_id !== 'ADMIN123') {
-            referringUser = await User.findOne({
-                referral_code: referral_id
-            });
-
-            if (!referringUser) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Invalid Referral ID.'
-                });
-            }
-        }
-
-        const salt = await bcrypt.genSalt(10);
-
-        const hashedPassword = await bcrypt.hash(
-            password,
-            salt
-        );
-
-        const generateReferralCode = () =>
-            `USER${crypto.randomBytes(3)
-            .toString('hex')
-            .toUpperCase()}`;
-
-        let newReferralCode = generateReferralCode();
-
-        while (
-            await User.findOne({
-                referral_code: newReferralCode
-            })
-        ) {
-            newReferralCode = generateReferralCode();
-        }
-
-        const otp = '123456';
-
-        const otp_expiry = new Date(
-            Date.now() + 5 * 60 * 1000
-        );
-
-        const newUser = new User({
-            username,
-            email,
-            mobile,
-            password: hashedPassword,
-            referral_code: newReferralCode,
-            referred_by: referringUser
-                ? referringUser._id
-                : null,
-            otp,
-            otp_expiry,
-            is_verified: false
-        });
-
-        await newUser.save();
-
-        res.status(201).json({
-            success: true,
-            message: 'User registered successfully.',
-            otp,
-            referral_code: newReferralCode
-        });
-
-    } catch (error) {
-        console.log(error);
-        res.status(500).json({
+    if (existingUser.is_verified === false) {
+        await User.deleteOne({ _id: existingUser._id });
+    } else {
+        return res.status(409).json({
             success: false,
-            message: 'Server Error'
+            message: 'Email already registered.'
         });
     }
-};
+}
+
+const existingMobile = await User.findOne({ mobile });
+
+if (existingMobile) {
+
+    if (existingMobile.is_verified === false) {
+        await User.deleteOne({ _id: existingMobile._id });
+    } else {
+        return res.status(409).json({
+            success: false,
+            message: 'Mobile number already registered'
+        });
+    }
+}
 
 // =====================================
 // VERIFY REFERRAL

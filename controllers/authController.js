@@ -4,6 +4,7 @@ const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const Transaction = require('../models/Transaction');
 const Withdrawal = require('../models/Withdrawal');
+const Settings = require('../models/Settings'); // Added for withdrawal rules
 
 // =====================================
 // REGISTER
@@ -579,12 +580,16 @@ exports.dashboard = async (req, res) => {
                     is_verified: user.is_verified,
                     status: user.status,
                     rank: user.rank,
-                    join_date: user.created_at,
+                    join_date: user.created_at || user.createdAt,
                     last_login: user.last_login,
-                    kyc_status: user.kyc_status
+                    kyc_status: user.kyc_status,
+                    is_prime: user.is_prime || false,
+                    is_active: user.is_active !== false
                 },
                 wallet: {
-                    wallet_balance: user.wallet_balance,
+                    available_balance: user.available_balance || 0,
+                    locked_balance: user.locked_balance || 0,
+                    wallet_balance: user.wallet_balance || 0,
                     total_income: user.total_income,
                     today_income: user.today_income,
                     monthly_income: user.monthly_income,
@@ -595,6 +600,7 @@ exports.dashboard = async (req, res) => {
                 },
                 team: {
                     direct_team_count: directTeamCount,
+                    total_team_count: user.total_team_count || 0,
                     direct_team_users: directTeamUsers
                 },
                 upline: uplineDetails
@@ -630,7 +636,9 @@ exports.wallet = async (req, res) => {
         res.status(200).json({
             success: true,
             wallet: {
-                wallet_balance: user.wallet_balance,
+                available_balance: user.available_balance || 0,
+                locked_balance: user.locked_balance || 0,
+                wallet_balance: user.wallet_balance || 0,
                 income: {
                     today_income: user.today_income,
                     monthly_income: user.monthly_income,
@@ -640,7 +648,7 @@ exports.wallet = async (req, res) => {
                     reward_income: user.reward_income,
                     offer_income: user.offer_income
                 },
-                last_updated: user.updated_at
+                last_updated: user.updated_at || user.updatedAt
             }
         });
 
@@ -946,32 +954,21 @@ exports.getTransactionHistory = async (req, res) => {
 exports.addIncome = async (req, res) => {
     try {
         const userId = req.user.userId;
-
-        const {
-            amount,
-            type,
-            description
-        } = req.body;
+        const { amount, type, description } = req.body;
 
         if (!amount || !type) {
-            return res.status(400).json({
-                success: false,
-                message: 'Amount and type are required'
-            });
+            return res.status(400).json({ success: false, message: 'Amount and type are required' });
         }
 
         const user = await User.findById(userId);
-
         if (!user) {
-            return res.status(404).json({
-                success: false,
-                message: 'User not found'
-            });
+            return res.status(404).json({ success: false, message: 'User not found' });
         }
 
-        // UPDATE WALLET
-        user.wallet_balance += Number(amount);
-        user.total_income += Number(amount);
+        // UPDATE WALLET (Adding to available and synced wallet balance)
+        user.available_balance = (user.available_balance || 0) + Number(amount);
+        user.wallet_balance = (user.wallet_balance || 0) + Number(amount);
+        user.total_income = (user.total_income || 0) + Number(amount);
 
         // INCOME TYPE UPDATE
         if (type === 'direct_income') {
@@ -998,16 +995,14 @@ exports.addIncome = async (req, res) => {
         res.status(200).json({
             success: true,
             message: 'Income added successfully',
+            available_balance: user.available_balance,
             wallet_balance: user.wallet_balance,
             transaction
         });
 
     } catch (error) {
-        console.log(error);
-        res.status(500).json({
-            success: false,
-            message: 'Income add failed'
-        });
+        console.log("ADD INCOME ERROR =>", error);
+        res.status(500).json({ success: false, message: 'Income add failed' });
     }
 };
 
@@ -1019,62 +1014,79 @@ exports.withdrawRequest = async (req, res) => {
     try {
         const userId = req.user.userId;
         const { amount } = req.body;
-
-        if (!amount) {
-            return res.status(400).json({
-                success: false,
-                message: 'Withdrawal amount is required'
-            });
-        }
-
         const withdrawAmount = Number(amount);
 
-        if (withdrawAmount <= 0) {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid withdrawal amount'
-            });
+        if (!withdrawAmount || withdrawAmount <= 0) {
+            return res.status(400).json({ success: false, message: 'Invalid withdrawal amount' });
         }
 
         const user = await User.findById(userId);
+        if (!user) return res.status(404).json({ success: false, message: 'User not found' });
 
-        if (!user) {
-            return res.status(404).json({
-                success: false,
-                message: 'User not found'
-            });
+        if (!user.is_prime) return res.status(400).json({ success: false, message: 'Only Prime members can withdraw' });
+        if (!user.is_active) return res.status(400).json({ success: false, message: 'ID is inactive. Please reactivate.' });
+        
+        // KYC Check
+        if (user.kyc_status !== 'Approved') {
+            return res.status(400).json({ success: false, message: 'KYC must be Approved to withdraw funds.' });
         }
 
-        if (user.wallet_balance < withdrawAmount) {
-            return res.status(400).json({
-                success: false,
-                message: 'Insufficient wallet balance'
-            });
+        // Mon-Fri allowed only
+        const today = new Date();
+        const dayOfWeek = today.getDay(); 
+        if (dayOfWeek === 0 || dayOfWeek === 6) {
+            return res.status(400).json({ success: false, message: 'Withdrawals allowed Monday to Friday only.' });
         }
 
-        // DEDUCT WALLET BALANCE
+        const settings = await Settings.findOne() || { min_withdrawal: 1000, monthly_withdrawal_limit: 3, tds_percentage: 5 };
+
+        if (withdrawAmount < settings.min_withdrawal) {
+            return res.status(400).json({ success: false, message: `Minimum withdrawal is ₹${settings.min_withdrawal}` });
+        }
+
+        // Deduct from Available Balance only
+        if ((user.available_balance || 0) < withdrawAmount) {
+            return res.status(400).json({ success: false, message: 'Insufficient Available Balance. Locked balance cannot be withdrawn.' });
+        }
+
+        const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+        const thisMonthWithdrawals = await Withdrawal.countDocuments({
+            user: userId,
+            createdAt: { $gte: startOfMonth }
+        });
+
+        if (thisMonthWithdrawals >= settings.monthly_withdrawal_limit) {
+            return res.status(400).json({ success: false, message: `Monthly limit of ${settings.monthly_withdrawal_limit} withdrawals reached.` });
+        }
+
+        // Calculate TDS & Deductions
+        const tdsAmount = (withdrawAmount * settings.tds_percentage) / 100;
+        const payableAmount = withdrawAmount - tdsAmount;
+
+        user.available_balance -= withdrawAmount;
         user.wallet_balance -= withdrawAmount;
         await user.save();
 
-        // CREATE WITHDRAWAL REQUEST
         const withdrawal = await Withdrawal.create({
             user: user._id,
             amount: withdrawAmount,
+            tds_deducted: tdsAmount,
+            payable_amount: payableAmount,
             status: 'Pending'
         });
 
-        // CREATE TRANSACTION HISTORY ENTRY
         const transaction = await Transaction.create({
             user: user._id,
             type: 'withdrawal',
             amount: withdrawAmount,
-            description: 'Withdrawal request submitted',
+            description: `Withdrawal request (TDS ₹${tdsAmount} deducted). Payable: ₹${payableAmount}`,
             status: 'pending'
         });
 
         res.status(200).json({
             success: true,
             message: 'Withdrawal request submitted successfully',
+            available_balance: user.available_balance,
             wallet_balance: user.wallet_balance,
             withdrawal,
             transaction
@@ -1082,10 +1094,7 @@ exports.withdrawRequest = async (req, res) => {
 
     } catch (error) {
         console.log("WITHDRAW ERROR =>", error);
-        res.status(500).json({
-            success: false,
-            message: 'Withdrawal request failed'
-        });
+        res.status(500).json({ success: false, message: 'Withdrawal request failed' });
     }
 };
 
@@ -1541,80 +1550,101 @@ exports.getDashboardSummary = async (req, res) => {
 exports.getRankProgress = async (req, res) => {
     try {
         const userId = req.user.userId;
-
         const user = await User.findById(userId);
 
         if (!user) {
-            return res.status(404).json({
-                success: false,
-                message: 'User not found'
-            });
+            return res.status(404).json({ success: false, message: 'User not found' });
         }
 
-        const directTeamCount = await User.countDocuments({
-            referred_by: userId
-        });
+        const directTeamCount = await User.countDocuments({ referred_by: userId });
+        const teamCount = user.total_team_count || 0;
+        const isPrime = user.is_prime;
 
         // Define Rank Plan
         const rankPlan = [
-            { name: 'Basic', required: 0 },
-            { name: 'Silver', required: 5 },
-            { name: 'Gold', required: 10 },
-            { name: 'Platinum', required: 25 },
-            { name: 'Diamond', required: 50 },
-            { name: 'Crown Diamond', required: 100 }
+            { name: 'Basic', requiredDirect: 0, requiredTeam: 0, requiresPrime: false },
+            { name: 'Starter', requiredDirect: 0, requiredTeam: 0, requiresPrime: true },
+            { name: 'Silver', requiredDirect: 2, requiredTeam: 0, requiresPrime: true },
+            { name: 'Gold', requiredDirect: 10, requiredTeam: 0, requiresPrime: true },
+            { name: 'Platinum', requiredDirect: 50, requiredTeam: 0, requiresPrime: true },
+            { name: 'Diamond', requiredDirect: 0, requiredTeam: 5000, requiresPrime: true },
+            { name: 'Crown Diamond', requiredDirect: 0, requiredTeam: 25000, requiresPrime: true },
+            { name: 'Global Crown', requiredDirect: 0, requiredTeam: 50000, requiresPrime: true }
         ];
 
-        let currentRank = 'Basic';
-        let nextRankObj = null;
+        let currentRankIndex = 0;
 
-        // Determine Current and Next Rank
-        for (let i = 0; i < rankPlan.length; i++) {
-            if (directTeamCount >= rankPlan[i].required) {
-                currentRank = rankPlan[i].name;
-                nextRankObj = rankPlan[i + 1] || null; // Will be null if highest rank is reached
+        // Determine Current Rank
+        for (let i = 1; i < rankPlan.length; i++) {
+            const rank = rankPlan[i];
+            if (!isPrime && rank.requiresPrime) break;
+            
+            if (directTeamCount >= rank.requiredDirect && teamCount >= rank.requiredTeam) {
+                currentRankIndex = i;
             } else {
-                break; // Stop loop once required target exceeds directTeamCount
+                break;
             }
         }
 
+        const currentRankObj = rankPlan[currentRankIndex];
+        let nextRankObj = currentRankIndex + 1 < rankPlan.length ? rankPlan[currentRankIndex + 1] : null;
+
         let nextRank = 'Achieved';
-        let requiredDirectTeam = rankPlan[rankPlan.length - 1].required; // Default to highest requirement
+        let requiredDirectTeam = 0;
         let remainingDirectTeam = 0;
+        let requiredTotalTeam = 0;
+        let remainingTotalTeam = 0;
         let progressPercentage = 100;
 
         // Calculate progress if not at highest rank
         if (nextRankObj) {
             nextRank = nextRankObj.name;
-            requiredDirectTeam = nextRankObj.required;
-            remainingDirectTeam = nextRankObj.required - directTeamCount;
-
-            // Calculate progress percentage relative to the *current rank* goal
-            const currentRankReq = rankPlan.find(r => r.name === currentRank).required;
-
-            const earnedInCurrentLevel = directTeamCount - currentRankReq;
-            const requiredForNextLevel = nextRankObj.required - currentRankReq;
-
-            progressPercentage = Math.round((earnedInCurrentLevel / requiredForNextLevel) * 100);
+            
+            if (nextRankObj.name === 'Starter') {
+                progressPercentage = isPrime ? 100 : 0;
+            } else if (nextRankObj.requiredTeam > 0) {
+                // Team-based progress (Diamond and above)
+                requiredTotalTeam = nextRankObj.requiredTeam;
+                remainingTotalTeam = Math.max(0, nextRankObj.requiredTeam - teamCount);
+                
+                const currentRankReq = currentRankObj.requiredTeam || 0;
+                const earnedInCurrentLevel = Math.max(0, teamCount - currentRankReq);
+                const requiredForNextLevel = nextRankObj.requiredTeam - currentRankReq;
+                
+                progressPercentage = requiredForNextLevel > 0 ? Math.round((earnedInCurrentLevel / requiredForNextLevel) * 100) : 100;
+            } else {
+                // Direct-based progress (Silver to Platinum)
+                requiredDirectTeam = nextRankObj.requiredDirect;
+                remainingDirectTeam = Math.max(0, nextRankObj.requiredDirect - directTeamCount);
+                
+                const currentRankReq = currentRankObj.requiredDirect || 0;
+                const earnedInCurrentLevel = Math.max(0, directTeamCount - currentRankReq);
+                const requiredForNextLevel = nextRankObj.requiredDirect - currentRankReq;
+                
+                progressPercentage = requiredForNextLevel > 0 ? Math.round((earnedInCurrentLevel / requiredForNextLevel) * 100) : 100;
+            }
         }
+
+        // Keep bounds safe
+        progressPercentage = Math.min(100, Math.max(0, progressPercentage));
 
         res.status(200).json({
             success: true,
             rank_progress: {
-                current_rank: currentRank,
+                current_rank: currentRankObj.name,
                 current_direct_team: directTeamCount,
+                current_total_team: teamCount,
                 next_rank: nextRank,
                 required_direct_team: requiredDirectTeam,
                 remaining_direct_team: remainingDirectTeam,
+                required_total_team: requiredTotalTeam,
+                remaining_total_team: remainingTotalTeam,
                 progress_percentage: progressPercentage
             }
         });
 
     } catch (error) {
         console.log("RANK PROGRESS ERROR =>", error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to fetch rank progress'
-        });
+        res.status(500).json({ success: false, message: 'Failed to fetch rank progress' });
     }
 };

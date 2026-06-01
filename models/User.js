@@ -79,7 +79,7 @@ const userSchema = new mongoose.Schema({
 
 
     // =====================================
-    // ACCOUNT STATUS
+    // ACCOUNT STATUS & PRIME SYSTEM
     // =====================================
 
     is_verified: {
@@ -93,10 +93,35 @@ const userSchema = new mongoose.Schema({
         default: 'Active'
     },
 
+    is_prime: {
+        type: Boolean,
+        default: false
+    },
+
+    prime_activation_date: {
+        type: Date,
+        default: null
+    },
+
+    is_active: {
+        type: Boolean,
+        default: true
+    },
+
 
     // =====================================
     // WALLET SYSTEM
     // =====================================
+
+    available_balance: {
+        type: Number,
+        default: 0
+    },
+
+    locked_balance: {
+        type: Number,
+        default: 0
+    },
 
     wallet_balance: {
         type: Number,
@@ -145,7 +170,7 @@ const userSchema = new mongoose.Schema({
 
     rank: {
         type: String,
-        default: 'Starter'
+        default: 'Basic'
     },
 
 

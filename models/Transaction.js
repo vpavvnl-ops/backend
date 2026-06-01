@@ -17,7 +17,8 @@ const transactionSchema = new mongoose.Schema({
             'level_income',
             'reward_income',
             'offer_income',
-            'withdrawal'
+            'withdrawal',
+            'task_income' // NEW: Added for Check-in, Reels, and Spin Wheel earnings
         ],
         required: true
     },

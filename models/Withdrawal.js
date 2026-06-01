@@ -13,6 +13,24 @@ const withdrawalSchema = new mongoose.Schema({
         required: true
     },
 
+    // =====================================
+    // TDS & PAYOUT SYSTEM (NEW)
+    // =====================================
+    
+    tds_deducted: {
+        type: Number,
+        default: 0
+    },
+
+    payable_amount: {
+        type: Number,
+        required: true
+    },
+
+    // =====================================
+    // BANK DETAILS
+    // =====================================
+
     bank_name: {
         type: String,
         default: ''

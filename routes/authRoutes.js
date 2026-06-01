@@ -7,6 +7,10 @@ const {
     verifyToken
 } = require('../middleware/authMiddleware');
 
+const {
+    enforceInactivityRule
+} = require('../middleware/inactivityRule'); // NEW: Added to check 15-day Prime rule dynamically
+
 const upload = require('../middleware/uploadMiddleware');
 
 
@@ -71,6 +75,7 @@ router.post(
 router.get(
     '/dashboard',
     verifyToken,
+    enforceInactivityRule,
     authController.dashboard
 );
 
@@ -82,6 +87,7 @@ router.get(
 router.get(
     '/wallet',
     verifyToken,
+    enforceInactivityRule,
     authController.wallet
 );
 
@@ -104,6 +110,7 @@ router.get(
 router.post(
     '/withdraw-request',
     verifyToken,
+    enforceInactivityRule,
     authController.withdrawRequest
 );
 
@@ -181,6 +188,7 @@ router.get(
 router.get(
     '/profile',
     verifyToken,
+    enforceInactivityRule,
     authController.getProfile
 );
 
@@ -205,29 +213,47 @@ router.post(
     verifyToken,
     authController.logout
 );
+
+// =====================================
 // DIRECT TEAM
+// =====================================
+
 router.get(
     '/direct-team',
     verifyToken,
     authController.getDirectTeam
 );
+
+// =====================================
 // TEAM SUMMARY
+// =====================================
+
 router.get(
     '/team-summary',
     verifyToken,
     authController.getTeamSummary
 );
+
+// =====================================
 // REFERRAL DETAILS
+// =====================================
+
 router.get(
     '/referral-details',
     verifyToken,
     authController.getReferralDetails
 );
+
+// =====================================
+// INCOME SUMMARY
+// =====================================
+
 router.get(
     '/income-summary',
     verifyToken,
     authController.getIncomeSummary
 );
+
 // =====================================
 // DOWNLINE INCOME (PROTECTED)
 // =====================================
@@ -237,6 +263,7 @@ router.get(
     verifyToken,
     authController.getDownlineIncome
 );
+
 // =====================================
 // LEVEL INCOME HISTORY (PROTECTED)
 // =====================================
@@ -246,6 +273,7 @@ router.get(
     verifyToken,
     authController.getLevelIncomeHistory
 );
+
 // =====================================
 // NOTIFICATIONS (PROTECTED)
 // =====================================
@@ -255,17 +283,28 @@ router.get(
     verifyToken,
     authController.getNotifications
 );
+
+// =====================================
 // DASHBOARD SUMMARY
+// =====================================
+
 router.get(
     '/dashboard-summary',
     verifyToken,
+    enforceInactivityRule,
     authController.getDashboardSummary
 );
+
+// =====================================
 // RANK PROGRESS (PROTECTED)
+// =====================================
+
 router.get(
     '/rank-progress',
     verifyToken,
     authController.getRankProgress
 );
+
 console.log("REFERRAL ROUTE LOADED");
+
 module.exports = router;

@@ -9,6 +9,7 @@ const path = require('path');
 const authRoutes = require('./routes/authRoutes');
 const taskRoutes = require('./routes/taskRoutes');
 const featureRoutes = require('./routes/featureRoutes');
+const appVersionRoutes = require('./routes/appVersionRoutes');
 
 // Cron Job Imports
 const startDailyResetCron = require('./cron/dailyReset');
@@ -66,6 +67,7 @@ app.get('/', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/task', taskRoutes);
 app.use('/api/features', featureRoutes);
+app.use('/api/app', appVersionRoutes);
 
 // =====================================
 // GLOBAL ERROR HANDLER

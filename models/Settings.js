@@ -44,7 +44,16 @@ const SettingsSchema = new mongoose.Schema({
     tds_percentage: { 
         type: Number, 
         default: 5 
-    }
+    },
+    upi_id: {
+    type: String,
+    default: 'vpajmerpnb@ybl'
+},
+
+company_name: {
+    type: String,
+    default: 'D-Task'
+}
 }, { 
     timestamps: true 
 });

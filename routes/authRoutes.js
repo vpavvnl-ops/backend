@@ -320,6 +320,11 @@ router.get(
     verifyToken,
     authController.getRankProgress
 );
+router.post(
+    '/generate-add-fund-qr',
+    verifyToken,
+    authController.generateAddFundQR
+);
 
 console.log("REFERRAL ROUTE LOADED");
 

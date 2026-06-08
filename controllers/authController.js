@@ -6,6 +6,7 @@ const Transaction = require('../models/Transaction');
 const Withdrawal = require('../models/Withdrawal');
 const Settings = require('../models/Settings'); // Added for withdrawal rules
 const AddFundRequest = require('../models/AddFundRequest');
+const QRCode = require('qrcode');
 
 // =====================================
 // REGISTER
@@ -1761,6 +1762,56 @@ exports.getAddFundHistory = async (req, res) => {
 
         console.log(
             'ADD FUND HISTORY ERROR =>',
+            error
+        );
+
+        res.status(500).json({
+            success: false,
+            message: 'Server Error'
+        });
+
+    }
+};
+// =====================================
+// GENERATE ADD FUND QR
+// =====================================
+
+exports.generateAddFundQR = async (req, res) => {
+    try {
+
+        const { amount } = req.body;
+
+        if (!amount || Number(amount) < 100) {
+            return res.status(400).json({
+                success: false,
+                message: 'Minimum add fund amount is ₹100'
+            });
+        }
+
+        let settings = await Settings.findOne();
+
+        if (!settings) {
+            settings = await Settings.create({});
+        }
+
+        const upiLink =
+            `upi://pay?pa=${settings.upi_id}&pn=${encodeURIComponent(settings.company_name)}&am=${amount}&cu=INR`;
+
+        const qrCodeImage = await QRCode.toDataURL(upiLink);
+
+        res.status(200).json({
+            success: true,
+            amount: Number(amount),
+            upi_id: settings.upi_id,
+            company_name: settings.company_name,
+            upi_link: upiLink,
+            qr_code: qrCodeImage
+        });
+
+    } catch (error) {
+
+        console.log(
+            'GENERATE QR ERROR =>',
             error
         );
 

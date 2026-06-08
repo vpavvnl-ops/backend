@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
 const Transaction = require('../models/Transaction');
 const Withdrawal = require('../models/Withdrawal');
 const Settings = require('../models/Settings'); // Added for withdrawal rules
+const AddFundRequest = require('../models/AddFundRequest');
 
 // =====================================
 // REGISTER
@@ -1646,5 +1647,127 @@ exports.getRankProgress = async (req, res) => {
     } catch (error) {
         console.log("RANK PROGRESS ERROR =>", error);
         res.status(500).json({ success: false, message: 'Failed to fetch rank progress' });
+    }
+};
+// =====================================
+// ADD FUND REQUEST
+// =====================================
+
+exports.requestAddFund = async (req, res) => {
+    try {
+
+        const userId = req.user.userId;
+
+        const {
+            amount,
+            transaction_id
+        } = req.body;
+
+        const payment_proof =
+            req.file
+                ? req.file.path
+                : req.body.payment_proof;
+
+        if (!amount || Number(amount) < 100) {
+            return res.status(400).json({
+                success: false,
+                message: 'Minimum add fund amount is ₹100'
+            });
+        }
+
+        if (!transaction_id || !payment_proof) {
+            return res.status(400).json({
+                success: false,
+                message: 'Transaction ID and Payment Proof are required'
+            });
+        }
+
+        const duplicateTx =
+            await AddFundRequest.findOne({
+                transaction_id
+            });
+
+        if (duplicateTx) {
+            return res.status(400).json({
+                success: false,
+                message: 'Transaction ID already used'
+            });
+        }
+
+        const existingPending =
+            await AddFundRequest.findOne({
+                user: userId,
+                status: 'pending'
+            });
+
+        if (existingPending) {
+            return res.status(400).json({
+                success: false,
+                message: 'You already have a pending add fund request.'
+            });
+        }
+
+        await AddFundRequest.create({
+            user: userId,
+            amount: Number(amount),
+            payment_method: 'manual',
+            transaction_id,
+            payment_proof,
+            status: 'pending'
+        });
+
+        res.status(200).json({
+            success: true,
+            message: 'Add Fund Request Submitted Successfully'
+        });
+
+    } catch (error) {
+
+        console.log(
+            'ADD FUND ERROR =>',
+            error
+        );
+
+        res.status(500).json({
+            success: false,
+            message: 'Server Error'
+        });
+
+    }
+};
+// =====================================
+// ADD FUND HISTORY
+// =====================================
+
+exports.getAddFundHistory = async (req, res) => {
+    try {
+
+        const userId = req.user.userId;
+
+        const history =
+            await AddFundRequest.find({
+                user: userId
+            })
+            .sort({
+                createdAt: -1
+            });
+
+        res.status(200).json({
+            success: true,
+            history
+        });
+
+    } catch (error) {
+
+        console.log(
+            'ADD FUND HISTORY ERROR =>',
+            error
+        );
+
+        res.status(500).json({
+            success: false,
+            message: 'Server Error'
+        });
+
     }
 };

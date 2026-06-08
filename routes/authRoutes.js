@@ -90,6 +90,22 @@ router.get(
     enforceInactivityRule,
     authController.wallet
 );
+// =====================================
+// ADD FUND
+// =====================================
+
+router.post(
+    '/add-fund-request',
+    verifyToken,
+    upload.single('payment_proof'),
+    authController.requestAddFund
+);
+
+router.get(
+    '/add-fund-history',
+    verifyToken,
+    authController.getAddFundHistory
+);
 
 
 // =====================================

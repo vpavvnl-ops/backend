@@ -723,7 +723,7 @@ exports.updateKyc = async (req, res) => {
 
         if (req.files && req.files['signature_image']) {
             user.signature_image =
-                req.files['signature_image'][0].path;
+    req.files['signature_image'][0].path;
         }
 
         user.kyc_status = 'Pending';

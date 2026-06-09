@@ -1822,3 +1822,144 @@ exports.generateAddFundQR = async (req, res) => {
 
     }
 };
+
+// =====================================
+// ADMIN: REJECT WITHDRAWAL (WITH AUTOMATIC REFUND)
+// =====================================
+
+exports.rejectWithdrawal = async (req, res) => {
+    try {
+        const { withdrawalId, rejectReason } = req.body;
+        
+        // 1. Find and validate the withdrawal request
+        const withdrawal = await Withdrawal.findById(withdrawalId);
+        if (!withdrawal) {
+            return res.status(404).json({ success: false, message: 'Withdrawal request not found' });
+        }
+        
+        // 2. Prevent duplicate rejections (Idempotency check)
+        if (withdrawal.status !== 'Pending') {
+            return res.status(400).json({ 
+                success: false, 
+                message: `Cannot reject. Withdrawal is already ${withdrawal.status}` 
+            });
+        }
+
+        const reason = rejectReason || 'Rejected by Admin due to policy violation';
+
+        // 3. Atomically refund both balances to prevent race conditions
+        const updatedUser = await User.findOneAndUpdate(
+            { _id: withdrawal.user },
+            { 
+                $inc: { 
+                    available_balance: withdrawal.amount, 
+                    wallet_balance: withdrawal.amount 
+                } 
+            },
+            { new: true } // Returns the updated document with the new balances
+        );
+
+        if (!updatedUser) {
+            return res.status(404).json({ success: false, message: 'User associated with this withdrawal not found' });
+        }
+
+        // 4. Update the withdrawal record
+        withdrawal.status = 'Rejected';
+        withdrawal.rejectReason = reason;
+        await withdrawal.save();
+
+        // 5. Update the corresponding pending transaction
+        await Transaction.findOneAndUpdate(
+            { 
+                user: withdrawal.user, 
+                type: 'withdrawal', 
+                amount: withdrawal.amount, 
+                status: 'pending' 
+            },
+            { 
+                status: 'failed', 
+                description: `Withdrawal Rejected: ${reason}` 
+            },
+            { sort: { createdAt: -1 } } // Ensures we update the most recent matching transaction
+        );
+
+        // 6. Return success with the dynamically updated balances
+        res.status(200).json({ 
+            success: true, 
+            message: 'Withdrawal rejected successfully. Funds have been refunded to the user.',
+            refunded_amount: withdrawal.amount,
+            updated_balances: {
+                available_balance: updatedUser.available_balance,
+                wallet_balance: updatedUser.wallet_balance
+            }
+        });
+
+    } catch (error) {
+        console.error("REJECT WITHDRAWAL ERROR =>", error);
+        res.status(500).json({ success: false, message: 'Server Error processing rejection' });
+    }
+};
+// =====================================
+// ADMIN APPROVE WITHDRAWAL
+// =====================================
+
+exports.approveWithdrawal = async (req, res) => {
+    try {
+
+        const { withdrawalId } = req.body;
+
+        const withdrawal = await Withdrawal.findById(withdrawalId);
+
+        if (!withdrawal) {
+            return res.status(404).json({
+                success: false,
+                message: 'Withdrawal not found'
+            });
+        }
+
+        if (withdrawal.status !== 'Pending') {
+            return res.status(400).json({
+                success: false,
+                message: `Withdrawal is already ${withdrawal.status}`
+            });
+        }
+
+        withdrawal.status = 'Approved';
+        withdrawal.approvedAt = new Date();
+
+        await withdrawal.save();
+
+        await Transaction.findOneAndUpdate(
+            {
+                user: withdrawal.user,
+                type: 'withdrawal',
+                amount: withdrawal.amount,
+                status: 'pending'
+            },
+            {
+                status: 'success'
+            },
+            {
+                sort: { createdAt: -1 }
+            }
+        );
+
+        res.status(200).json({
+            success: true,
+            message: 'Withdrawal approved successfully'
+        });
+
+    } catch (error) {
+
+        console.log(
+            'APPROVE WITHDRAWAL ERROR =>',
+            error
+        );
+
+        res.status(500).json({
+            success: false,
+            message: 'Server Error'
+        });
+
+    }
+};

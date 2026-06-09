@@ -14,9 +14,9 @@ const withdrawalSchema = new mongoose.Schema({
     },
 
     // =====================================
-    // TDS & PAYOUT SYSTEM (NEW)
+    // TDS & PAYOUT SYSTEM
     // =====================================
-    
+
     tds_deducted: {
         type: Number,
         default: 0
@@ -51,6 +51,10 @@ const withdrawalSchema = new mongoose.Schema({
         default: ''
     },
 
+    // =====================================
+    // STATUS
+    // =====================================
+
     status: {
         type: String,
         enum: [
@@ -59,6 +63,16 @@ const withdrawalSchema = new mongoose.Schema({
             'Rejected'
         ],
         default: 'Pending'
+    },
+
+    rejectReason: {
+        type: String,
+        default: ''
+    },
+
+    approvedAt: {
+        type: Date,
+        default: null
     }
 
 }, {

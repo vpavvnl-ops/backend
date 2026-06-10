@@ -914,6 +914,73 @@ exports.changePassword = async (req, res) => {
         });
     }
 };
+exports.updateProfile = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+
+        const {
+            username,
+            mobile,
+            full_name
+        } = req.body;
+
+        const user = await User.findById(userId);
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        if (username) {
+            user.username = username;
+        }
+
+        if (mobile) {
+
+            const existingMobile = await User.findOne({
+                mobile,
+                _id: { $ne: userId }
+            });
+
+            if (existingMobile) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Mobile number already exists'
+                });
+            }
+
+            user.mobile = mobile;
+        }
+
+        if (full_name) {
+            user.full_name = full_name;
+        }
+
+        await user.save();
+
+        res.status(200).json({
+            success: true,
+            message: 'Profile updated successfully',
+            user: {
+                username: user.username,
+                email: user.email,
+                mobile: user.mobile,
+                full_name: user.full_name,
+                referral_code: user.referral_code
+            }
+        });
+
+    } catch (error) {
+        console.log(error);
+
+        res.status(500).json({
+            success: false,
+            message: 'Server Error'
+        });
+    }
+};
 
 // =====================================
 // LOGOUT

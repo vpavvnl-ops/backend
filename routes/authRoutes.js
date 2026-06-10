@@ -325,6 +325,11 @@ router.post(
     verifyToken,
     authController.generateAddFundQR
 );
+router.put(
+    '/update-profile',
+    verifyToken,
+    authController.updateProfile
+);
 
 console.log("REFERRAL ROUTE LOADED");
 

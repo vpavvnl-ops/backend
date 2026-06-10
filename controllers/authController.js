@@ -847,13 +847,25 @@ exports.changePassword = async (req, res) => {
 
         const {
             oldPassword,
-            newPassword
+            newPassword,
+            confirmPassword
         } = req.body;
 
-        if (!oldPassword || !newPassword) {
+        if (
+            !oldPassword ||
+            !newPassword ||
+            !confirmPassword
+        ) {
             return res.status(400).json({
                 success: false,
-                message: 'Old password and new password are required'
+                message: 'Old password, new password and confirm password are required'
+            });
+        }
+
+        if (newPassword !== confirmPassword) {
+            return res.status(400).json({
+                success: false,
+                message: 'New password and confirm password do not match'
             });
         }
 

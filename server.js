@@ -4,12 +4,14 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
+const adminRoutes = require('./routes/admin/adminRoutes');
 
 // Route Imports
 const authRoutes = require('./routes/authRoutes');
 const taskRoutes = require('./routes/taskRoutes');
 const featureRoutes = require('./routes/featureRoutes');
 const appVersionRoutes = require('./routes/appVersionRoutes');
+
 
 // Cron Job Imports
 const startDailyResetCron = require('./cron/dailyReset');
@@ -33,6 +35,7 @@ app.use(
         path.join(__dirname, 'uploads')
     )
 );
+app.use('/api/admin', adminRoutes);
 
 // =====================================
 // MONGODB CONNECTION & CRON INITIALIZATION

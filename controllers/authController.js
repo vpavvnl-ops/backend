@@ -1119,7 +1119,7 @@ exports.withdrawRequest = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Withdrawals allowed Monday to Friday only.' });
         }
 
-        const settings = await Settings.findOne() || { min_withdrawal: 1000, monthly_withdrawal_limit: 3, tds_percentage: 5 };
+        const settings = await Settings.findOne() || { min_withdrawal: 500, monthly_withdrawal_limit: 3, tds_percentage: 5 };
 
         if (withdrawAmount < settings.min_withdrawal) {
             return res.status(400).json({ success: false, message: `Minimum withdrawal is ₹${settings.min_withdrawal}` });
@@ -1873,8 +1873,10 @@ exports.generateAddFundQR = async (req, res) => {
             settings = await Settings.create({});
         }
 
-        const upiLink =
-            `upi://pay?pa=${settings.upi_id}&pn=${encodeURIComponent(settings.company_name)}&am=${amount}&cu=INR`;
+        const txnRef = `DTASK${Date.now()}`;
+
+const upiLink =
+`upi://pay?pa=${settings.upi_id}&pn=${encodeURIComponent(settings.company_name)}&tr=${txnRef}&tn=${encodeURIComponent('D-Task Payment')}&am=${amount}&cu=INR`;
 
         const qrCodeImage = await QRCode.toDataURL(upiLink);
 

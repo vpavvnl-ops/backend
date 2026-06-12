@@ -18,6 +18,12 @@ const {
     blockUser,
   unblockUser
 } = require('../../controllers/admin/adminUsersController');
+const {
+  getPendingKyc,
+  getKycDetails,
+   approveKyc,
+  rejectKyc
+} = require('../../controllers/admin/adminKycController');
 
 router.post('/login', loginAdmin);
 router.get('/profile', adminAuth, getProfile);
@@ -71,6 +77,47 @@ router.put(
         'sub_admin'
     ),
     unblockUser
+);
+// KYC Management
+router.get(
+  '/kyc/pending',
+  adminAuth,
+  allowRoles(
+    'super_admin',
+    'sub_admin',
+    'staff_admin'
+  ),
+  getPendingKyc
+);
+
+router.get(
+  '/kyc/:id',
+  adminAuth,
+  allowRoles(
+    'super_admin',
+    'sub_admin',
+    'staff_admin'
+  ),
+  getKycDetails
+);
+router.put(
+  '/kyc/approve/:id',
+  adminAuth,
+  allowRoles(
+    'super_admin',
+    'sub_admin'
+  ),
+  approveKyc
+);
+
+router.put(
+  '/kyc/reject/:id',
+  adminAuth,
+  allowRoles(
+    'super_admin',
+    'sub_admin'
+  ),
+  rejectKyc
 );
 
 module.exports = router;

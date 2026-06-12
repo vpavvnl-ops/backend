@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const User = require('../../models/User');
 
 exports.getUsers = async (req, res) => {
@@ -87,4 +88,45 @@ exports.getUsers = async (req, res) => {
                 'Server error while fetching users'
         });
     }
+};
+exports.getUserById = async (req, res) => {
+  try {
+    const userId = req.params.id;
+
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid user ID'
+      });
+    }
+
+    const user = await User.findById(userId)
+      .select('-password');
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'User details fetched successfully',
+      data: user
+    });
+
+  } catch (error) {
+
+    console.error(
+      'Admin Get Single User Error:',
+      error
+    );
+
+    return res.status(500).json({
+      success: false,
+      message:
+        'Server error while fetching user details'
+    });
+  }
 };

@@ -14,7 +14,9 @@ const { adminAuth } = require('../../middleware/adminAuthMiddleware');
 const { allowRoles } = require('../../middleware/adminRoleMiddleware');
 const {
   getUsers,
-   getUserById
+   getUserById,
+    blockUser,
+  unblockUser
 } = require('../../controllers/admin/adminUsersController');
 
 router.post('/login', loginAdmin);
@@ -51,5 +53,24 @@ router.get(
     getUserById
 );
 
+router.put(
+    '/user/block/:id',
+    adminAuth,
+    allowRoles(
+        'super_admin',
+        'sub_admin'
+    ),
+    blockUser
+);
+
+router.put(
+    '/user/unblock/:id',
+    adminAuth,
+    allowRoles(
+        'super_admin',
+        'sub_admin'
+    ),
+    unblockUser
+);
 
 module.exports = router;

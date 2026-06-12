@@ -12,6 +12,9 @@ const {
 
 const { adminAuth } = require('../../middleware/adminAuthMiddleware');
 const { allowRoles } = require('../../middleware/adminRoleMiddleware');
+const {
+  getUsers
+} = require('../../controllers/admin/adminUsersController');
 
 router.post('/login', loginAdmin);
 router.get('/profile', adminAuth, getProfile);
@@ -25,6 +28,16 @@ router.get(
         'staff_admin'
     ),
     getDashboardStats
+);
+router.get(
+    '/users',
+    adminAuth,
+    allowRoles(
+        'super_admin',
+        'sub_admin',
+        'staff_admin'
+    ),
+    getUsers
 );
 
 

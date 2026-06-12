@@ -1,0 +1,23 @@
+const allowRoles = (...allowedRoles) => {
+  return (req, res, next) => {
+    // Ensure the request has passed through adminAuth first
+    if (!req.admin) {
+      return res.status(401).json({
+        success: false,
+        message: 'Not authorized, authentication required before checking roles'
+      });
+    }
+
+    // Verify if the admin's role is included in the allowed list
+    if (!allowedRoles.includes(req.admin.role)) {
+      return res.status(403).json({
+        success: false,
+        message: `Forbidden: Your role (${req.admin.role}) does not have permission to access this resource`
+      });
+    }
+
+    next();
+  };
+};
+
+module.exports = { allowRoles };

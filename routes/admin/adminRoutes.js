@@ -24,6 +24,12 @@ const {
    approveKyc,
   rejectKyc
 } = require('../../controllers/admin/adminKycController');
+const {
+  getPendingWithdrawals,
+  getWithdrawalDetails,
+   approveWithdrawal,
+  rejectWithdrawal
+} = require('../../controllers/admin/adminWithdrawalController');
 
 router.post('/login', loginAdmin);
 router.get('/profile', adminAuth, getProfile);
@@ -118,6 +124,48 @@ router.put(
     'sub_admin'
   ),
   rejectKyc
+);
+// Withdrawal Management
+
+router.get(
+    '/withdrawals/pending',
+    adminAuth,
+    allowRoles(
+        'super_admin',
+        'sub_admin',
+        'staff_admin'
+    ),
+    getPendingWithdrawals
+);
+
+router.get(
+    '/withdrawal/:id',
+    adminAuth,
+    allowRoles(
+        'super_admin',
+        'sub_admin',
+        'staff_admin'
+    ),
+    getWithdrawalDetails
+);
+router.put(
+    '/withdrawal/approve',
+    adminAuth,
+    allowRoles(
+        'super_admin',
+        'sub_admin'
+    ),
+    approveWithdrawal
+);
+
+router.put(
+    '/withdrawal/reject',
+    adminAuth,
+    allowRoles(
+        'super_admin',
+        'sub_admin'
+    ),
+    rejectWithdrawal
 );
 
 module.exports = router;

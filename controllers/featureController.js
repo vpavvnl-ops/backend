@@ -92,63 +92,90 @@ exports.getLeaderboard = async (req, res) => {
 
 exports.submitPrimeRequest = async (req, res) => {
     try {
-        const { type, amount, transaction_id } = req.body;
+        const { type } = req.body;
         const userId = req.user.userId;
-        const payment_proof = req.file ? req.file.path : req.body.payment_proof;
 
         if (!['activation', 'reactivation'].includes(type)) {
-            return res.status(400).json({ success: false, message: 'Invalid request type' });
-        }
-        
-        if (!amount || !transaction_id || !payment_proof) {
-            return res.status(400).json({ success: false, message: 'All fields are required' });
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid request type'
+            });
         }
 
         const user = await User.findById(userId);
+
         if (!user) {
-            return res.status(404).json({ success: false, message: 'User not found' });
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
         }
 
         if (type === 'activation' && user.is_prime) {
-            return res.status(400).json({ success: false, message: 'User is already prime' });
+            return res.status(400).json({
+                success: false,
+                message: 'User is already prime'
+            });
         }
-        
-        if (type === 'reactivation' && (!user.is_prime || user.is_active)) {
-            return res.status(400).json({ success: false, message: 'Reactivation is only for inactive prime users' });
+
+        if (
+            type === 'reactivation' &&
+            (!user.is_prime || user.is_active)
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: 'Reactivation is only for inactive prime users'
+            });
         }
 
         const settings = await Settings.findOne() || new Settings();
-        
-        if (type === 'activation' && Number(amount) !== settings.prime_amount) {
-            return res.status(400).json({ success: false, message: `Activation requires ₹${settings.prime_amount}` });
-        }
-        
-        if (type === 'reactivation' && Number(amount) !== settings.reactivation_fee) {
-            return res.status(400).json({ success: false, message: `Reactivation requires ₹${settings.reactivation_fee}` });
+
+        const requiredAmount =
+            type === 'activation'
+                ? settings.prime_amount
+                : settings.reactivation_fee;
+
+        if ((user.wallet_balance || 0) < requiredAmount) {
+            return res.status(400).json({
+                success: false,
+               message: `Insufficient wallet balance. Required ₹${requiredAmount}`
+            });
         }
 
-        const duplicateTx = await PrimeRequest.findOne({ transaction_id });
-        if (duplicateTx) {
-            return res.status(400).json({ success: false, message: 'Transaction ID already used' });
-        }
-
-        const existingPending = await PrimeRequest.findOne({ user: userId, status: 'pending' });
-        if (existingPending) {
-            return res.status(400).json({ success: false, message: 'You already have a pending request.' });
-        }
-
-        await PrimeRequest.create({ 
-            user: userId, 
-            type, 
-            amount: Number(amount), 
-            transaction_id, 
-            payment_proof 
+        const existingPending = await PrimeRequest.findOne({
+            user: userId,
+            status: 'pending'
         });
 
-        res.status(200).json({ success: true, message: 'Request submitted successfully. Waiting for admin approval.' });
+        if (existingPending) {
+            return res.status(400).json({
+                success: false,
+                message: 'You already have a pending request.'
+            });
+        }
 
-    } catch (error) { 
-        console.error("PRIME REQUEST ERROR =>", error);
-        res.status(500).json({ success: false, message: 'Server Error' }); 
+        await PrimeRequest.create({
+            user: userId,
+            type,
+            amount: requiredAmount
+        });
+
+        res.status(200).json({
+            success: true,
+            message: 'Prime request submitted successfully. Waiting for admin approval.'
+        });
+
+    } catch (error) {
+
+        console.error(
+            'PRIME REQUEST ERROR =>',
+            error
+        );
+
+        res.status(500).json({
+            success: false,
+            message: 'Server Error'
+        });
+
     }
 };

@@ -30,6 +30,12 @@ const {
    approveWithdrawal,
   rejectWithdrawal
 } = require('../../controllers/admin/adminWithdrawalController');
+const {
+  getPendingPrimeRequests,
+  getPrimeRequestDetails,
+  approvePrimeRequest,
+  rejectPrimeRequest
+} = require('../../controllers/admin/adminPrimeController');
 
 router.post('/login', loginAdmin);
 router.get('/profile', adminAuth, getProfile);
@@ -166,6 +172,33 @@ router.put(
         'sub_admin'
     ),
     rejectWithdrawal
+);
+router.get(
+  '/prime/pending',
+  adminAuth,
+  allowRoles('super_admin', 'sub_admin', 'staff_admin'),
+  getPendingPrimeRequests
+);
+
+router.get(
+  '/prime/:id',
+  adminAuth,
+  allowRoles('super_admin', 'sub_admin', 'staff_admin'),
+  getPrimeRequestDetails
+);
+
+router.put(
+  '/prime/approve/:id',
+  adminAuth,
+  allowRoles('super_admin', 'sub_admin'),
+  approvePrimeRequest
+);
+
+router.put(
+  '/prime/reject/:id',
+  adminAuth,
+  allowRoles('super_admin', 'sub_admin'),
+  rejectPrimeRequest
 );
 
 module.exports = router;

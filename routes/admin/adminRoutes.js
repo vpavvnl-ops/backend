@@ -36,6 +36,12 @@ const {
   approvePrimeRequest,
   rejectPrimeRequest
 } = require('../../controllers/admin/adminPrimeController');
+const {
+  getPendingAddFunds,
+  getAddFundDetails,
+  approveAddFund,
+  rejectAddFund
+} = require('../../controllers/admin/adminAddFundController');
 
 router.post('/login', loginAdmin);
 router.get('/profile', adminAuth, getProfile);
@@ -199,6 +205,36 @@ router.put(
   adminAuth,
   allowRoles('super_admin', 'sub_admin'),
   rejectPrimeRequest
+);
+// ==========================================
+// Add Fund Management
+// ==========================================
+router.get(
+  '/addfund/pending', 
+  adminAuth, 
+  allowRoles('super_admin', 'sub_admin', 'staff_admin'), 
+  getPendingAddFunds
+);
+
+router.get(
+  '/addfund/:id', 
+  adminAuth, 
+  allowRoles('super_admin', 'sub_admin', 'staff_admin'), 
+  getAddFundDetails
+);
+
+router.put(
+  '/addfund/approve/:id', 
+  adminAuth, 
+  allowRoles('super_admin', 'sub_admin'), 
+  approveAddFund
+);
+
+router.put(
+  '/addfund/reject/:id', 
+  adminAuth, 
+  allowRoles('super_admin', 'sub_admin'), 
+  rejectAddFund
 );
 
 module.exports = router;

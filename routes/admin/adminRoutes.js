@@ -42,6 +42,10 @@ const {
   approveAddFund,
   rejectAddFund
 } = require('../../controllers/admin/adminAddFundController');
+const {
+    getSettings,
+    updateSettings
+} = require('../../controllers/admin/adminSettingsController');
 
 router.post('/login', loginAdmin);
 router.get('/profile', adminAuth, getProfile);
@@ -236,5 +240,17 @@ router.put(
   allowRoles('super_admin', 'sub_admin'), 
   rejectAddFund
 );
+router.get(
+    '/settings',
+    adminAuth,
+    allowRoles('super_admin'),
+    getSettings
+);
 
+router.put(
+    '/settings',
+    adminAuth,
+    allowRoles('super_admin'),
+    updateSettings
+);
 module.exports = router;

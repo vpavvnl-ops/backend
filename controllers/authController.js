@@ -1915,7 +1915,7 @@ exports.rejectWithdrawal = async (req, res) => {
         // 1. Find and validate the withdrawal request
         const withdrawal = await Withdrawal.findById(withdrawalId);
         if (!withdrawal) {
-            return res.status(404).json({ success: false, message: 'Withdrawal request not found' });
+            return resexports.approveWithdrawal.status(404).json({ success: false, message: 'Withdrawal request not found' });
         }
         
         // 2. Prevent duplicate rejections (Idempotency check)

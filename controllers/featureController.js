@@ -153,7 +153,11 @@ exports.submitPrimeRequest = async (req, res) => {
                 message: 'You already have a pending request.'
             });
         }
+            user.wallet_balance -= requiredAmount;
+            user.available_balance -= requiredAmount;
 
+            await user.save();
+        
         await PrimeRequest.create({
             user: userId,
             type,

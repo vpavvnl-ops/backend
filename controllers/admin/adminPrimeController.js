@@ -125,11 +125,18 @@ exports.approvePrimeRequest = async (req, res) => {
     }
 
     const user = request.user;
+    if (user.is_prime) {
+    return res.status(400).json({
+        success: false,
+        message: 'User is already a Prime member'
+    });
+}
     const currentDate = new Date();
 
     // 1. Update Request Status
     request.status = 'approved';
     request.approved_at = currentDate;
+    request.admin_remark = 'Approved by Admin';
 
     // 2. Apply Core Business Logic to User
     // 2. Check Wallet Balance
@@ -144,6 +151,7 @@ if ((user.wallet_balance || 0) < request.amount) {
 // 3. Deduct Wallet
 
 user.wallet_balance -= request.amount;
+user.available_balance -= request.amount;
 
 // 4. Activate Prime
 

@@ -103,8 +103,7 @@ exports.getWithdrawalDetails = async (req, res) => {
 exports.approveWithdrawal = async (req, res) => {
     try {
 
-        const { withdrawalId } = req.body;
-
+        const withdrawalId = req.params.id;
         const withdrawal = await Withdrawal.findById(withdrawalId);
 
         if (!withdrawal) {
@@ -162,12 +161,13 @@ exports.approveWithdrawal = async (req, res) => {
 };
 exports.rejectWithdrawal = async (req, res) => {
     try {
-        const { withdrawalId, rejectReason } = req.body;
+        const withdrawalId = req.params.id;
+        const { rejectReason } = req.body;
         
         // 1. Find and validate the withdrawal request
         const withdrawal = await Withdrawal.findById(withdrawalId);
         if (!withdrawal) {
-            return resexports.approveWithdrawal.status(404).json({ success: false, message: 'Withdrawal request not found' });
+            return res.status(404).json({ success: false, message: 'Withdrawal request not found' });
         }
         
         // 2. Prevent duplicate rejections (Idempotency check)

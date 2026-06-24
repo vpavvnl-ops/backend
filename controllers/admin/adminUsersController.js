@@ -22,29 +22,35 @@ exports.getUsers = async (req, res) => {
 
         let query = {};
 
-        if (searchQuery) {
+        if (searchQuery && searchQuery.length >= 2) {
             query = {
-                $or: [
-                    {
-                        username: {
-                            $regex: searchQuery,
-                            $options: 'i'
-                        }
-                    },
-                    {
-                        email: {
-                            $regex: searchQuery,
-                            $options: 'i'
-                        }
-                    },
-                    {
-                        mobile: {
-                            $regex: searchQuery,
-                            $options: 'i'
-                        }
-                    }
-                ]
-            };
+  $or: [
+    {
+      username: {
+        $regex: searchQuery,
+        $options: 'i'
+      }
+    },
+    {
+      email: {
+        $regex: searchQuery,
+        $options: 'i'
+      }
+    },
+    {
+      mobile: {
+        $regex: searchQuery,
+        $options: 'i'
+      }
+    },
+             {
+                   referral_code: {
+                 $regex: searchQuery,
+                $options: 'i'
+               }
+             }
+           ]
+          };
         }
 
         const [users, totalUsers] =

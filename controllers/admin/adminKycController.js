@@ -135,6 +135,7 @@ exports.approveKyc = async (req, res) => {
 
     // 4. Update status
     user.kyc_status = 'Approved';
+    user.is_verified = true;
     await user.save();
 
     // 5. Return response
@@ -197,8 +198,7 @@ exports.rejectKyc = async (req, res) => {
 
     // 4. Update status
     user.kyc_status = 'Rejected';
-    // Optional: You might want to clear the uploaded images here so the user can re-upload,
-    // depending on your specific business logic.
+    user.is_verified = false;
     await user.save();
 
     // 5. Return response

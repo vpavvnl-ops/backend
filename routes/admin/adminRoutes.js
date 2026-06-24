@@ -165,7 +165,7 @@ router.get(
     getWithdrawalDetails
 );
 router.put(
-    '/withdrawal/approve',
+    '/withdrawal/approve/:id',
     adminAuth,
     allowRoles(
         'super_admin',
@@ -175,7 +175,7 @@ router.put(
 );
 
 router.put(
-    '/withdrawal/reject',
+    '/withdrawal/reject/:id',
     adminAuth,
     allowRoles(
         'super_admin',

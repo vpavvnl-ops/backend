@@ -130,6 +130,7 @@ exports.approveAddFund = async (req, res) => {
     // 1. Update Request Status
     request.status = 'approved';
     request.approved_at = new Date();
+    request.admin_remark = 'Approved by Admin';
 
     // 2. Apply Funds to User Balances
     user.wallet_balance += amount;

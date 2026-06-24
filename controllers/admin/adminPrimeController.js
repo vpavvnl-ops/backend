@@ -138,21 +138,7 @@ exports.approvePrimeRequest = async (req, res) => {
     request.approved_at = currentDate;
     request.admin_remark = 'Approved by Admin';
 
-    // 2. Apply Core Business Logic to User
-    // 2. Check Wallet Balance
-
-if ((user.wallet_balance || 0) < request.amount) {
-  return res.status(400).json({
-    success: false,
-    message: `Insufficient activation wallet balance. Required ₹${request.amount}`
-  });
-}
-
-// 3. Deduct Wallet
-
-user.wallet_balance -= request.amount;
-user.available_balance -= request.amount;
-
+  
 // 4. Activate Prime
 
 user.is_prime = true;

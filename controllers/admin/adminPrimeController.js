@@ -212,7 +212,20 @@ exports.rejectPrimeRequest = async (req, res) => {
     // 1. Update Status and Remark
     request.status = 'rejected';
     request.admin_remark = admin_remark.trim();
-    
+    // Refund amount back to user's wallet
+    const user = await User.findById(request.user);
+
+    if (!user) {
+    return res.status(404).json({
+    success: false,
+    message: 'Associated user not found'
+    });
+    }
+
+    user.wallet_balance += request.amount;
+    user.available_balance += request.amount;
+
+    await user.save();
     await request.save();
 
     return res.status(200).json({

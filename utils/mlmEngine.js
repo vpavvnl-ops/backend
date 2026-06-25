@@ -38,6 +38,8 @@ exports.checkAndUpgradeRank = async (user) => {
 };
 
 exports.distributeActivationIncome = async (activatedUserId, activationType = 'activation') => {
+    console.log("========== MLM DEBUG ==========");
+    console.log("Activation Type:", activationType);
     try {
         const settings = await Settings.findOne() || new Settings();
         const activatedUser = await User.findById(activatedUserId);

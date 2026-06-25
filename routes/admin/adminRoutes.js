@@ -13,10 +13,14 @@ const {
 const { adminAuth } = require('../../middleware/adminAuthMiddleware');
 const { allowRoles } = require('../../middleware/adminRoleMiddleware');
 const {
-  getUsers,
-   getUserById,
-    blockUser,
-  unblockUser
+   getUsers,
+  getUserById,
+  blockUser,
+  unblockUser,
+  getUserNetwork,
+  getUserLedger,
+  getUserTimeline,
+  adjustUserBalance
 } = require('../../controllers/admin/adminUsersController');
 const {
   getPendingKyc,
@@ -253,4 +257,62 @@ router.put(
     allowRoles('super_admin'),
     updateSettings
 );
+// ==========================================
+// User Network
+// ==========================================
+
+router.get(
+    '/user/network/:id',
+    adminAuth,
+    allowRoles(
+        'super_admin',
+        'sub_admin',
+        'staff_admin'
+    ),
+    getUserNetwork
+);
+
+// ==========================================
+// User Ledger
+// ==========================================
+
+router.get(
+    '/user/ledger/:id',
+    adminAuth,
+    allowRoles(
+        'super_admin',
+        'sub_admin',
+        'staff_admin'
+    ),
+    getUserLedger
+);
+
+// ==========================================
+// User Timeline
+// ==========================================
+
+router.get(
+    '/user/timeline/:id',
+    adminAuth,
+    allowRoles(
+        'super_admin',
+        'sub_admin',
+        'staff_admin'
+    ),
+    getUserTimeline
+);
+
+// ==========================================
+// Wallet Adjustment
+// ==========================================
+
+router.post(
+    '/user/adjust-balance',
+    adminAuth,
+    allowRoles(
+        'super_admin'
+    ),
+    adjustUserBalance
+);
+
 module.exports = router;

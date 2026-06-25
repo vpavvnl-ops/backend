@@ -55,7 +55,7 @@ const updatedUser = await User.findOneAndUpdate(
         today_income: { $lt: dailyLimit } 
     },
     { $inc: baseInc },
-    { session, new: true }
+    { session, returnDocument: 'after' }
 );
 
 if (!updatedUser) {
@@ -190,7 +190,7 @@ try {
                 prime_activation_date: new Date()
             } 
         },
-        { session, new: true }
+        { session, returnDocument: 'after' }
     ).lean();
 
     if (!activatedUser) {

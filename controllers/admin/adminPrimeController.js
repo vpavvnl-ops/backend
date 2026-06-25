@@ -1,6 +1,7 @@
 const PrimeRequest = require('../../models/PrimeRequest');
 const User = require('../../models/User');
 const mongoose = require('mongoose');
+const mlmEngine = require('../../utils/mlmEngine');
 
 // @route   GET /api/admin/prime/pending
 // @desc    Get all pending prime activation/reactivation requests
@@ -150,6 +151,10 @@ user.prime_activation_date = currentDate;
       request.save(),
       user.save()
     ]);
+    await mlmEngine.distributeActivationIncome(
+    user._id,
+    request.type
+);
 
     return res.status(200).json({
       success: true,

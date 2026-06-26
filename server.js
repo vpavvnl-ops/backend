@@ -76,13 +76,37 @@ app.use('/api/app', appVersionRoutes);
 // GLOBAL ERROR HANDLER
 // =====================================
 
+const multer = require('multer');
+
 app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(500).json({
+
+    console.error(err);
+
+    // Multer File Size Error
+    if (err instanceof multer.MulterError) {
+
+        if (err.code === 'LIMIT_FILE_SIZE') {
+
+            return res.status(400).json({
+                success: false,
+                message: 'Image size must be less than 100 KB.'
+            });
+
+        }
+
+        return res.status(400).json({
+            success: false,
+            message: err.message
+        });
+
+    }
+
+    // Other Errors
+    return res.status(500).json({
         success: false,
-        message: 'Internal Server Error',
-        error: err.message
+        message: err.message || 'Internal Server Error'
     });
+
 });
 
 // =====================================

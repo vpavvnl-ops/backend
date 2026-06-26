@@ -750,16 +750,14 @@ exports.updateKyc = async (req, res) => {
             }
         });
 
-    } catch (error) {
-    console.error("========== UPDATE KYC ERROR ==========");
-    console.error(error);
-    console.error(error?.stack);
-
-    return res.status(500).json({
-        success: false,
-        message: error?.message || "Server Error"
-    });
-}
+    }
+     catch (error) {
+        console.log(error);
+        res.status(500).json({
+            success: false,
+            message: 'Server Error'
+        });
+    }
 };
 
 // =====================================

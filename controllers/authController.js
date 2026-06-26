@@ -751,12 +751,15 @@ exports.updateKyc = async (req, res) => {
         });
 
     } catch (error) {
-        console.log(error);
-        res.status(500).json({
-            success: false,
-            message: 'Server Error'
-        });
-    }
+    console.error("========== UPDATE KYC ERROR ==========");
+    console.error(error);
+    console.error(error?.stack);
+
+    return res.status(500).json({
+        success: false,
+        message: error?.message || "Server Error"
+    });
+}
 };
 
 // =====================================
@@ -1937,7 +1940,7 @@ exports.rejectWithdrawal = async (req, res) => {
                     wallet_balance: withdrawal.amount 
                 } 
             },
-            { new: true } // Returns the updated document with the new balances
+            { returnDocument: 'after' } // Returns the updated document with the new balances
         );
 
         if (!updatedUser) {

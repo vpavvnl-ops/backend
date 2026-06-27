@@ -701,3 +701,92 @@ exports.adjustUserBalance = async (req, res) => {
         await session.endSession();
     }
 };
+
+// @route   PUT /api/admin/user/:id
+// @desc    Update editable user profile fields with strict validation checks
+// @access  Private
+exports.updateUser = async (req, res) => {
+    try {
+        const userId = req.params.id;
+
+        if (!mongoose.Types.ObjectId.isValid(userId)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid user ID format'
+            });
+        }
+
+        const allowedFields = [
+            'full_name', 'username', 'email', 'mobile', 'profile_image',
+            'is_active', 'is_verified', 'is_prime', 'rank','status',
+            'bank_name', 'account_number', 'ifsc_code',
+            'aadhaar_number', 'pan_number', 'kyc_status'
+        ];
+
+        let updateFields = {};
+        
+        // Ensure only fields present in req.body and explicitly allowed are mapped, avoiding undefined injection
+        allowedFields.forEach(field => {
+            if (req.body[field] !== undefined) {
+                updateFields[field] = req.body[field];
+            }
+        });
+
+        if (Object.keys(updateFields).length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'No updatable parameters provided inside request body'
+            });
+        }
+
+        // Dynamic multi-field unique constraint check ignoring target user document context
+if (updateFields.username || updateFields.email || updateFields.mobile) {     
+           const matchCriteria = [];
+            if (updateFields.username) matchCriteria.push({ username: updateFields.username });
+            if (updateFields.email) matchCriteria.push({ email: updateFields.email });
+            if (updateFields.mobile) matchCriteria.push({ mobile: updateFields.mobile });
+           
+
+            const conflictDoc = await User.findOne({
+                _id: { $ne: new mongoose.Types.ObjectId(userId) },
+                $or: matchCriteria
+            });
+
+            if (conflictDoc) {
+                if (updateFields.username && conflictDoc.username === updateFields.username) {
+                    return res.status(400).json({ success: false, message: 'Username is already taken' });
+                }
+                if (updateFields.email && conflictDoc.email === updateFields.email) {
+                    return res.status(400).json({ success: false, message: 'Email address is already registered' });
+                }
+                if (updateFields.mobile && conflictDoc.mobile === updateFields.mobile) {
+                    return res.status(400).json({ success: false, message: 'Mobile number is already registered' });
+                }
+                
+            }
+        }
+
+        const updatedUser = await User.findByIdAndUpdate(
+    userId,
+    { $set: updateFields },
+    {
+        returnDocument: 'after',
+        runValidators: true
+     }
+        ).select('-password');
+        
+
+        return res.status(200).json({
+            success: true,
+            message: 'User updated successfully',
+            data: updatedUser
+        });
+
+    } catch (error) {
+        console.error('Admin Update User Profile Error:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Server error while performing user update operations'
+        });
+    }
+};

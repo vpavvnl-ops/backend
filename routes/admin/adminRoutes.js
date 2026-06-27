@@ -13,14 +13,15 @@ const {
 const { adminAuth } = require('../../middleware/adminAuthMiddleware');
 const { allowRoles } = require('../../middleware/adminRoleMiddleware');
 const {
-   getUsers,
-  getUserById,
-  blockUser,
-  unblockUser,
-  getUserNetwork,
-  getUserLedger,
-  getUserTimeline,
-  adjustUserBalance
+  getUsers,
+    getUserById,
+    blockUser,
+    unblockUser,
+    getUserNetwork,
+    getUserLedger,
+    getUserTimeline,
+    adjustUserBalance,
+    updateUser
 } = require('../../controllers/admin/adminUsersController');
 const {
   getPendingKyc,
@@ -104,6 +105,16 @@ router.put(
     ),
     unblockUser
 );
+router.put(
+    '/user/:id',
+    adminAuth,
+    allowRoles(
+        'super_admin',
+        'sub_admin'
+    ),
+    updateUser
+);
+
 // KYC Management
 router.get(
   '/kyc/pending',

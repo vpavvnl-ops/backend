@@ -43,19 +43,128 @@ exports.getUsers = async (req, res) => {
         if (req.query.kyc_status) {
             query.kyc_status = req.query.kyc_status; // 'Not Submitted', 'Pending', 'Approved', 'Rejected'
         }
-
+        // Verified Filter
+        if (req.query.is_verified) {
+        query.is_verified = req.query.is_verified === 'true';
+        }
         if (req.query.rank) {
             query.rank = req.query.rank;
         }
 
-        const [users, totalUsers] = await Promise.all([
-            User.find(query)
-                .sort({ created_at: -1 })
-                .skip(skip)
-                .limit(limit)
-                .select('-password'),
-            User.countDocuments(query)
-        ]);
+        // Registration Date Filter
+if (req.query.startDate || req.query.endDate) {
+
+    query.created_at = {};
+
+    if (req.query.startDate) {
+        query.created_at.$gte = new Date(req.query.startDate);
+    }
+
+    if (req.query.endDate) {
+
+        const endDate = new Date(req.query.endDate);
+        endDate.setHours(23, 59, 59, 999);
+
+        query.created_at.$lte = endDate;
+    }
+}
+
+// Last Login Filter
+if (req.query.lastLogin) {
+
+    const now = new Date();
+    let startDate = null;
+
+    switch (req.query.lastLogin) {
+
+        case 'today':
+            startDate = new Date();
+            startDate.setHours(0, 0, 0, 0);
+            break;
+
+        case '7days':
+            startDate = new Date(now);
+            startDate.setDate(now.getDate() - 7);
+            break;
+
+        case '30days':
+            startDate = new Date(now);
+            startDate.setDate(now.getDate() - 30);
+            break;
+    }
+
+    if (startDate) {
+        query.last_login = {
+            $gte: startDate
+        };
+    }
+}
+
+// Wallet Balance Range Filter
+if (req.query.minWallet || req.query.maxWallet) {
+
+    query.wallet_balance = {};
+
+    if (req.query.minWallet) {
+        query.wallet_balance.$gte = Number(req.query.minWallet);
+    }
+
+    if (req.query.maxWallet) {
+        query.wallet_balance.$lte = Number(req.query.maxWallet);
+    }
+}
+
+
+
+
+        // Default Sorting
+let sort = {
+    created_at: -1
+};
+
+// Custom Sorting
+switch (req.query.sortBy) {
+
+    case 'oldest':
+        sort = { created_at: 1 };
+        break;
+
+    case 'wallet_high':
+        sort = { wallet_balance: -1 };
+        break;
+
+    case 'wallet_low':
+        sort = { wallet_balance: 1 };
+        break;
+
+    case 'income_high':
+        sort = { total_income: -1 };
+        break;
+
+    case 'income_low':
+        sort = { total_income: 1 };
+        break;
+
+    case 'name_asc':
+        sort = { username: 1 };
+        break;
+
+    case 'name_desc':
+        sort = { username: -1 };
+        break;
+
+    default:
+        sort = { created_at: -1 };
+}
+
+const [users, totalUsers] = await Promise.all([
+    User.find(query)
+        .sort(sort)
+        .skip(skip)
+        .limit(limit)
+        .select('-password'),
+    User.countDocuments(query)
+]);
 
         const totalPages = Math.ceil(totalUsers / limit);
 
